@@ -79,10 +79,10 @@
                                 </div>
                                 <?php endif; ?>
                                 <?php if ($config->allowRegistration) : ?>
-                                <!-- <div class="text-center">
+                                <div class="text-center">
                                     <a class="small"
                                         href="<?= url_to('register') ?>"><?= lang('Auth.needAnAccount') ?></a>
-                            </div> -->
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>

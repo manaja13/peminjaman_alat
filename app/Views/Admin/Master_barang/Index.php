@@ -1,18 +1,18 @@
-<?= $this->extend('Admin/Templates/Index') ?>
-<?= $this->section('page-content'); ?>
+<?php echo $this->extend('Admin/Templates/Index') ?>
+<?php echo $this->section('page-content'); ?>
 <!-- Begin Page Content -->
 <div class="container-fluid">
     <!-- Page Heading -->
     <h1 class="h3 mb-4 text-gray-900"></h1>
 
 
-    <?php if (session()->has('PesanBerhasil')) : ?>
+    <?php if (session()->has('PesanBerhasil')): ?>
     <div class="alert alert-success" role="alert">
-        <?= session('PesanBerhasil') ?>
+        <?php echo session('PesanBerhasil') ?>
     </div>
-    <?php elseif (session()->has('PesanGagal')) : ?>
+    <?php elseif (session()->has('PesanGagal')): ?>
     <div class="alert alert-danger" role="alert">
-        <?= session('PesanGagal') ?>
+        <?php echo session('PesanGagal') ?>
     </div>
     <?php endif; ?>
 
@@ -26,74 +26,62 @@
                     <a href="/Admin/addBarang" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Barang</a>
 
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Kode Barang</th>
-                                    <th>Nama Barang</th>
-                                    <th>Jenis</th>
-                                    <th>Opsi</th>
-                                </tr>
-                            </thead>
-                            <tfoot>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Kode Barang</th>
-                                    <th>Nama Barang</th>
-                                    <th>jenis</th>
-                                    <th>Opsi</th>
-                                </tr>
-                            </tfoot>
-                            <tbody>
+          <div class="card-body">
+    <div class="table-responsive">
+        <table class="table align-middle text-center" id="dataTable" width="100%" cellspacing="0">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Kode Barang</th>
+                    <th>Nama Barang</th>
+                  
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($master_brg) {?>
+<?php foreach ($master_brg as $num => $data) {?>
+                        <tr>
+                            <td><?php echo $num + 1; ?></td>
+                            <td><span class="fw-bold"><?php echo $data['kode_brg']; ?></span></td>
+                            <td class="text-start">
+                                <i class="fa fa-box text-primary me-2"></i>
+                                <?php echo $data['nama_brg']; ?>
+                                <small class="text-muted">(<?php echo $data['merk']; ?>)</small>
+                            </td>
+                       
+                            <td>
+                                <a href="<?php echo site_url('/Admin/detail_master_brg/' . $data['kode_brg']) ?>"
+                                   class="btn btn-sm btn-primary" title="Lihat Detail">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                                <a href="/Admin/ubah_master/<?php echo $data['kode_brg'] ?>"
+                                   class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                <!-- kalau butuh delete tinggal buka ini
+                                <a href="#" class="btn btn-sm btn-danger btn-delete" data-toggle="modal"
+                                   data-target="#modalKonfirmasiDelete"
+                                   data-delete-url="<?php echo site_url('/Admin/delete/' . $data['kode_brg']) ?>"
+                                   title="Hapus">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                                -->
+                            </td>
+                        </tr>
+                    <?php }?>
+<?php } else {?>
+                    <tr>
+                        <td colspan="5">
+                            <h5 class="text-muted text-center">Belum ada data barang.</h5>
+                        </td>
+                    </tr>
+                <?php }?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                                <?php if ($master_brg) { ?>
-                                <?php foreach ($master_brg as $num => $data) { ?>
-                                <tr>
-                                    <td><?= $num + 1; ?></td>
-                                    <td style="text-align:center; width: 30px;">
-                                        <?= $data['kode_brg']; ?>
-                                    </td>
-                                    <td><?= $data['nama_brg']; ?>(<?= $data['merk']; ?>)
-                                    </td>
-                                    <td>
-                                        <?php
-                                                if ($data['jenis_brg'] == 'sfw') {
-                                                    echo "Software";
-                                                } else {
-                                                    echo "Hardware";
-                                                }
-                                                ?>
-                                    </td>
-                                    <td style="text-align:center; width: 150px;">
-                                        <a href="<?= site_url('/Admin/detail_master_brg/' . $data['kode_brg']) ?>"
-                                            class="  btn btn-primary"><i class="fa fa-eye"></i> </a>
-                                        <!-- <a href="/inventaris/detailinv/<?= $data['kode_brg'] ?>"
-                                        class=" btn btn-primary"><i class="fa fa-eye"></i> Detail</a> -->
-                                        <a href="/Admin/ubah_master/<?= $data['kode_brg'] ?>"
-                                            class="  btn btn-warning"><i class="fa fa-edit"></i> </a>
-                                        <!-- <a href="#" class="btn btn-danger btn-delete" data-toggle="modal"
-                                            data-target="#modalKonfirmasiDelete"
-                                            data-delete-url="<?= site_url('/Admin/delete/' . $data['kode_brg']) ?>">
-                                            <i class="fa fa-trash"></i>
-                                        </a> -->
-                                    </td>
-                                </tr>
-                                <?php } ?>
-                                <!-- end of foreach                -->
-                                <?php } else { ?>
-                                <tr>
-                                    <td colspan="4">
-                                        <h3 class="text-gray-900 text-center">Data belum ada.</h3>
-                                    </td>
-                                </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
         </div>
@@ -121,8 +109,8 @@
         </div>
     </div>
 </div>
-<?= $this->endSection(); ?>
-<?= $this->section('additional-js'); ?>
+<?php echo $this->endSection(); ?>
+<?php echo $this->section('additional-js'); ?>
 <script>
 window.setTimeout(function() {
     $(".alert").fadeTo(500, 0).slideUp(500, function() {
@@ -137,4 +125,4 @@ $('.btn-delete').on('click', function(e) {
     $('#modalKonfirmasiDelete').modal('show');
 });
 </script>
-<?= $this->endSection(); ?>
+<?php echo $this->endSection(); ?>

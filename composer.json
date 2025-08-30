@@ -11,6 +11,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "dompdf/dompdf": "^2.0",
+        "endroid/qr-code": "^5.1",
         "kint-php/kint": "^4.0",
         "laminas/laminas-escaper": "^2.9",
         "mpdf/mpdf": "^8.2",

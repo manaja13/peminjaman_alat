@@ -43,12 +43,12 @@ class tipeBarangModel extends Model
         if ($id == false) {
             return $this
                 ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
-                ->where(['master_barang.jenis_brg' => 'atk'])
+                // ->where(['master_barang.jenis_brg' => 'atk'])
                 ->findAll();
         }
         return $this
             ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
-            ->where(['master_barang.jenis_brg' => 'atk'])
+            // ->where(['master_barang.jenis_brg' => 'atk'])
             ->where(['detail_master_id' => $id])
             ->first();
     }

@@ -1,29 +1,27 @@
 <?php
-
 namespace App\Controllers;
 
 use App\Libraries\Ciqrcode;
 use App\Models\BalasanModel;
 use App\Models\BarangModel;
-use App\Models\InventarisModel;
 use App\Models\detailPengadaanModel;
 use App\Models\detailPermintaanModel;
+use App\Models\InventarisModel;
+use App\Models\masterBarangModel;
 use App\Models\PengadaanModel;
+use App\Models\pengecekanModel;
 use App\Models\PermintaanModel;
 use App\Models\Profil;
+use App\Models\satuanModel;
 use App\Models\tipeBarangModel;
 use App\Models\TransaksiBarangModel;
-use App\Models\masterBarangModel;
-use App\Models\pengecekanModel;
-use App\Models\satuanModel;
+use Endroid\QrCode\Logo\Logo;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Kenjis\CI3Compatible\Core\CI_Input;
 use Myth\Auth\Entities\User;
 use Myth\Auth\Models\GroupModel;
 use Myth\Auth\Models\UserModel;
-use Fpdf\Fpdf;
-use Mpdf\Mpdf;
-
-use setasign\Fpdi\Fpdi;
 
 /**
  * @property Home_model $home_model
@@ -52,24 +50,24 @@ class Admin extends BaseController
     protected $TransaksiBarangModel;
     public function __construct()
     {
-        $this->InventarisModel = new InventarisModel();
-        $this->PermintaanModel = new PermintaanModel();
-        $this->PengadaanModel = new PengadaanModel();
-        $this->detailPengadaanModel = new detailPengadaanModel();
+        $this->InventarisModel       = new InventarisModel();
+        $this->PermintaanModel       = new PermintaanModel();
+        $this->PengadaanModel        = new PengadaanModel();
+        $this->detailPengadaanModel  = new detailPengadaanModel();
         $this->detailPermintaanModel = new detailPermintaanModel();
-        $this->BalasanModel = new BalasanModel();
-        $this->Profil = new Profil();
-        $this->tipeBarangModel = new tipeBarangModel();
-        $this->pengecekanModel = new pengecekanModel();
-        $this->BarangModel = new BarangModel();
-        $this->satuanModel = new satuanModel();
-        $this->TransaksiBarangModel = new TransaksiBarangModel();
-        $this->db = \Config\Database::connect();
-        $this->builder = $this->db->table('users');
-        $this->validation = \Config\Services::validation();
-        $this->session = \Config\Services::session();
-        $this->ciqrcode = new \App\Libraries\Ciqrcode();
-        $this->masterBarangModel = new masterBarangModel();
+        $this->BalasanModel          = new BalasanModel();
+        $this->Profil                = new Profil();
+        $this->tipeBarangModel       = new tipeBarangModel();
+        $this->pengecekanModel       = new pengecekanModel();
+        $this->BarangModel           = new BarangModel();
+        $this->satuanModel           = new satuanModel();
+        $this->TransaksiBarangModel  = new TransaksiBarangModel();
+        $this->db                    = \Config\Database::connect();
+        $this->builder               = $this->db->table('users');
+        $this->validation            = \Config\Services::validation();
+        $this->session               = \Config\Services::session();
+        $this->ciqrcode              = new \App\Libraries\Ciqrcode();
+        $this->masterBarangModel     = new masterBarangModel();
     }
 
     public function index()
@@ -80,39 +78,38 @@ class Admin extends BaseController
         $dataInventaris = $this->db->table('inventaris')->get()->getResult();
 
         // Menghitung total untuk masing-masing status permintaan_barang
-        $queryPermintaan = $this->db->table('detail_permintaan_barang')->get()->getResult();
-        $queryProsesPermintaan = $this->db->table('detail_permintaan_barang')->where('status', 'diproses')->get()->getResult();
+        $queryPermintaan        = $this->db->table('detail_permintaan_barang')->get()->getResult();
+        $queryProsesPermintaan  = $this->db->table('detail_permintaan_barang')->where('status', 'diproses')->get()->getResult();
         $querySelesaiPermintaan = $this->db->table('detail_permintaan_barang')->where('status', 'selesai')->get()->getResult();
 
         // Menghitung total untuk masing-masing status pengadaan_barang
-        $queryPengadaan = $this->db->table('detail_pengadaan_barang')->get()->getResult();
-        $queryProsesPengadaan = $this->db->table('detail_pengadaan_barang')->where('status', 'diproses')->get()->getResult();
+        $queryPengadaan        = $this->db->table('detail_pengadaan_barang')->get()->getResult();
+        $queryProsesPengadaan  = $this->db->table('detail_pengadaan_barang')->where('status', 'diproses')->get()->getResult();
         $querySelesaiPengadaan = $this->db->table('detail_pengadaan_barang')->where('status', 'selesai')->get()->getResult();
 
         $queryBarangStokDibawah10 = $this->db->table('barang')->where('stok <', 10)->get()->getResult();
 
-        $semua_inventaris = count($dataInventaris);
-        $semua_permintaan = count($queryPengadaan);
-        $semua_pengadaan = count($queryPermintaan);
-        $proses_permintaan = count($queryProsesPermintaan);
+        $semua_inventaris   = count($dataInventaris);
+        $semua_permintaan   = count($queryPengadaan);
+        $semua_pengadaan    = count($queryPermintaan);
+        $proses_permintaan  = count($queryProsesPermintaan);
         $selesai_permintaan = count($querySelesaiPermintaan);
 
-        $proses_pengadaan = count($queryProsesPengadaan);
+        $proses_pengadaan  = count($queryProsesPengadaan);
         $selesai_pengadaan = count($querySelesaiPengadaan);
-        $stokdibawah10 = count($queryBarangStokDibawah10);
+        $stokdibawah10     = count($queryBarangStokDibawah10);
 
         $data = [
-            'title' => 'BPS - Home',
-            'stokdibawah10' => $stokdibawah10,
-            'semua_inventaris' => $semua_inventaris,
-            'semua_permintaan' => $semua_permintaan,
-            'semua_pengadaan' => $semua_pengadaan,
-            'proses_permintaan' => $proses_permintaan,
+            'title'              => 'BPS - Home',
+            'stokdibawah10'      => $stokdibawah10,
+            'semua_inventaris'   => $semua_inventaris,
+            'semua_permintaan'   => $semua_permintaan,
+            'semua_pengadaan'    => $semua_pengadaan,
+            'proses_permintaan'  => $proses_permintaan,
             'selesai_permintaan' => $selesai_permintaan,
-            'proses_pengadaan' => $proses_pengadaan,
-            'selesai_pengadaan' => $selesai_pengadaan,
+            'proses_pengadaan'   => $proses_pengadaan,
+            'selesai_pengadaan'  => $selesai_pengadaan,
         ];
-
 
         return view('Admin/Home/Index', $data);
     }
@@ -153,13 +150,13 @@ class Admin extends BaseController
 
     public function profil()
     {
-        $data['title'] = 'User Profile ';
-        $userlogin = user()->username;
-        $userid = user()->id;
-        $role = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
+        $data['title']            = 'User Profile ';
+        $userlogin                = user()->username;
+        $userid                   = user()->id;
+        $role                     = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
         $role == '1' ? $role_echo = 'Admin' : $role_echo = 'Pegawai'; // $data['title'] = 'User Profile ';
-        $userlogin = user()->username;
-        $userid = user()->id;
+        $userlogin                = user()->username;
+        $userid                   = user()->id;
 
         // Mengambil data role dari tabel auth_groups_users
         $roleData = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
@@ -167,7 +164,7 @@ class Admin extends BaseController
         // Memeriksa apakah data role ditemukan
         if ($roleData) {
 
-            $adminRoleId = 1;
+            $adminRoleId      = 1;
             $petugasPengadaan = 2;
 
             // Menentukan status role berdasarkan ID role
@@ -183,19 +180,18 @@ class Admin extends BaseController
             $role_echo = 'Pegawai';
         }
 
-
-        $data = $this->db->table('permintaan_barang');
-        $query1 = $data->where('id_user', $userid)->get()->getResult();
+        $data    = $this->db->table('permintaan_barang');
+        $query1  = $data->where('id_user', $userid)->get()->getResult();
         $builder = $this->db->table('users');
         $builder->select('id,username,email,created_at,foto');
         $builder->where('username', $userlogin);
         $query = $builder->get();
         $semua = count($query1);
-        $data = [
+        $data  = [
             'semua' => $semua,
-            'user' => $query->getRow(),
+            'user'  => $query->getRow(),
             'title' => 'Profil - BPS',
-            'role' => $role_echo,
+            'role'  => $role_echo,
 
         ];
 
@@ -205,31 +201,28 @@ class Admin extends BaseController
     public function simpanProfile($id)
     {
         $userlogin = user()->username;
-        $builder = $this->db->table('users');
+        $builder   = $this->db->table('users');
         $builder->select('*');
         $query = $builder->where('username', $userlogin)->get()->getRowArray();
-
-
 
         $foto = $this->request->getFile('foto');
         if ($foto->getError() == 4) {
             $this->profil->update($id, [
-                'email' => $this->request->getPost('email'),
+                'email'    => $this->request->getPost('email'),
                 'username' => $this->request->getPost('username'),
             ]);
         } else {
 
-
             $nama_foto = 'AdminFOTO' . $this->request->getPost('username') . '.' . $foto->guessExtension();
-            if (!(empty($query['foto']))) {
+            if (! (empty($query['foto']))) {
                 unlink('uploads/profile/' . $query['foto']);
             }
             $foto->move('uploads/profile', $nama_foto);
 
             $this->profil->update($id, [
-                'email' => $this->request->getPost('email'),
+                'email'    => $this->request->getPost('email'),
                 'username' => $this->request->getPost('username'),
-                'foto' => $nama_foto
+                'foto'     => $nama_foto,
             ]);
         }
         session()->setFlashdata('msg', 'Profil Admin  berhasil Diubah');
@@ -239,7 +232,7 @@ class Admin extends BaseController
     {
         $passwordLama = $this->request->getPost('passwordLama');
         $passwordbaru = $this->request->getPost('passwordBaru');
-        $konfirm = $this->request->getPost('konfirm');
+        $konfirm      = $this->request->getPost('konfirm');
 
         if ($passwordbaru != $konfirm) {
             session()->setFlashdata('error-msg', 'Password Baru tidak sesuai');
@@ -248,11 +241,11 @@ class Admin extends BaseController
 
         $builder = $this->db->table('users');
         $builder->where('id', user()->id);
-        $query = $builder->get()->getRow();
+        $query       = $builder->get()->getRow();
         $verify_pass = password_verify(base64_encode(hash('sha384', $passwordLama, true)), $query->password_hash);
 
         if ($verify_pass) {
-            $users = new UserModel();
+            $users  = new UserModel();
             $entity = new \Myth\Auth\Entities\User();
 
             $entity->setPassword($passwordbaru);
@@ -266,14 +259,11 @@ class Admin extends BaseController
         }
     }
 
-
-
-
     // satuan
     public function satuan()
     {
         $data = [
-            'title' => 'Satuan Barang',
+            'title'  => 'Satuan Barang',
             'satuan' => $this->satuanModel->findAll(),
         ];
         return view('Admin/Satuan/Index', $data);
@@ -282,22 +272,22 @@ class Admin extends BaseController
     public function tambah_satuan()
     {
         $data = [
-            'title' => 'Tambah Satuan',
+            'title'      => 'Tambah Satuan',
             'validation' => $this->validation,
         ];
         return view('Admin/Satuan/Tambah_satuan', $data);
     }
     public function simpanSatuan()
     {
-        if (!$this->validate([
+        if (! $this->validate([
 
             'nama_satuan' => [
-                'rules' => 'required|is_unique[satuan.nama_satuan]',
+                'rules'  => 'required|is_unique[satuan.nama_satuan]',
                 'errors' => [
-                    'required' => 'nama satuan harus diisi',
-                    'is_unique' => 'nama satuan sudah ada'
-                ]
-            ]
+                    'required'  => 'nama satuan harus diisi',
+                    'is_unique' => 'nama satuan sudah ada',
+                ],
+            ],
         ])) {
             return redirect()->to('/admin/tambah_satuan')->withInput();
         }
@@ -313,15 +303,15 @@ class Admin extends BaseController
     public function satuan_edit($id)
     {
         $data = [
-            'title' => 'Ubah Satuan',
+            'title'      => 'Ubah Satuan',
             'validation' => $this->validation,
-            'satuan' => $this->satuanModel->find($id)
+            'satuan'     => $this->satuanModel->find($id),
         ];
         return view('Admin/Satuan/Edit_satuan', $data);
     }
     public function updateSatuan()
     {
-        $id = $this->request->getPost('id');
+        $id   = $this->request->getPost('id');
         $data = [
             'nama_satuan' => $this->request->getPost('nama_satuan'),
         ];
@@ -338,86 +328,131 @@ class Admin extends BaseController
     // master barang
     public function master_barang()
     {
-        $data['title'] = 'Master Barang';
+        $data['title']      = 'Master Barang';
         $data['master_brg'] = $this->masterBarangModel
             ->orderBy('jenis_brg', 'ASC')
             ->findAll();
+
         return view('Admin/Master_barang/Index', $data);
     }
-    public function master_barang_inv()
+
+    public function masterBarang()
     {
-        $data['title'] = 'Master Barang';
+        $data['title']      = 'Master Barang';
         $data['master_brg'] = $this->masterBarangModel
             ->orderBy('jenis_brg', 'ASC')
-            ->getMasterInventory();
-        return view('Admin/Master_barang/Index', $data);
-    }
-    public function master_barang_atk()
-    {
-        $data['title'] = 'Master Barang';
-        $data['master_brg'] = $this->masterBarangModel
-            ->orderBy('jenis_brg', 'ASC')
-            ->getMasterAtk();
+            ->getMasterBarang();
+
+        // dd($data);
         return view('Admin/Master_barang/Index', $data);
     }
 
     public function addBarang()
     {
         $data = [
-            'title' => 'Tambah Barang',
+            'title'      => 'Tambah Barang',
             'validation' => $this->validation,
         ];
         return view('Admin/Master_barang/Tambah_barang', $data);
     }
-    public function saveBarang()
-{
-    if (!$this->validate([
-        'nama_barang' => [
-            'rules' => 'required',
-            'errors' => [
-                'required' => 'Nama Barang harus diisi',
-            ]
-        ],
-        'merk' => [
-            'rules' => 'required',
-            'errors' => [
-                'required' => 'Merk harus diisi'
-            ]
-        ],
-    ])) {
-        return redirect()->to('/admin/addBarang')->withInput();
+    public function saveBarang1()
+    {
+        if (! $this->validate([
+            'nama_barang' => [
+                'rules'  => 'required',
+                'errors' => [
+                    'required' => 'Nama Barang harus diisi',
+                ],
+            ],
+            'merk'        => [
+                'rules'  => 'required',
+                'errors' => [
+                    'required' => 'Merk harus diisi',
+                ],
+            ],
+        ])) {
+            return redirect()->to('/admin/addBarang')->withInput();
+        }
+
+        // Ambil nama barang
+        $nama_barang = $this->request->getPost('nama_barang');
+
+        // Ambil 3 huruf pertama (uppercase)
+        $prefix = strtoupper(substr(preg_replace('/\s+/', '', $nama_barang), 0, 3));
+
+        // Generate kode barang
+        $kode_brg = $prefix . '-' . date('Ymd') . '-' . rand(100, 999);
+
+        $data = [
+            'kode_brg'  => $kode_brg,
+            'merk'      => $this->request->getPost('merk'),
+            'nama_brg'  => $nama_barang,
+            'jenis_brg' => $this->request->getPost('jenis_barang'),
+        ];
+
+        $this->masterBarangModel->insert($data);
+
+        session()->setFlashdata('pesan', 'Data berhasil ditambahkan');
+        return redirect()->to('/admin/master_barang');
     }
 
-    // Ambil nama barang
-    $nama_barang = $this->request->getPost('nama_barang');
+    public function saveBarangMaster()
+    {
+        // Validasi input
+        if (! $this->validate([
+            'nama_barang' => [
+                'rules'  => 'required',
+                'errors' => ['required' => 'Nama Barang harus diisi'],
+            ],
+            'merk'        => [
+                'rules'  => 'required',
+                'errors' => ['required' => 'Merk harus diisi'],
+            ],
+            'tipe_barang' => [
+                'rules'  => 'required',
+                'errors' => ['required' => 'Tipe Barang harus diisi'],
+            ],
+        ])) {
+            return redirect()->to('/admin/addBarang')->withInput();
+        }
 
-    // Ambil 3 huruf pertama (uppercase)
-    $prefix = strtoupper(substr(preg_replace('/\s+/', '', $nama_barang), 0, 3));
+        // Ambil nama barang
+        $nama_barang = $this->request->getPost('nama_barang');
 
-    // Generate kode barang
-    $kode_brg = $prefix . '-' . date('Ymd') . '-' . rand(100, 999);
+        // Ambil 3 huruf pertama (uppercase tanpa spasi)
+        $prefix = strtoupper(substr(preg_replace('/\s+/', '', $nama_barang), 0, 3));
 
-    $data = [
-        'kode_brg' => $kode_brg,
-        'merk' => $this->request->getPost('merk'),
-        'nama_brg' => $nama_barang,
-        'jenis_brg' => $this->request->getPost('jenis_barang'),
-    ];
+        // Generate kode barang unik
+        $kode_brg = $prefix . '-' . date('Ymd') . '-' . rand(100, 999);
 
-    $this->masterBarangModel->insert($data);
+        // Data untuk master barang
+        $dataBarang = [
+            'kode_brg'  => $kode_brg,
+            'merk'      => $this->request->getPost('merk'),
+            'nama_brg'  => $nama_barang,
+            'jenis_brg' => $this->request->getPost('jenis_barang'),
+        ];
 
-    session()->setFlashdata('pesan', 'Data berhasil ditambahkan');
-    return redirect()->to('/admin/master_barang');
-}
+        // Simpan barang ke master_barang
+        $this->masterBarangModel->insert($dataBarang);
 
+        // Setelah insert barang → simpan tipe barang
+        $dataTipe = [
+            'tipe_barang'   => $this->request->getPost('tipe_barang'),
+            'master_barang' => $kode_brg, // relasi ke kode_brg
+        ];
+        $this->tipeBarangModel->insert($dataTipe);
 
-  
+        session()->setFlashdata('pesan', 'Data Barang & Tipe berhasil ditambahkan');
+        return redirect()->to('/admin/master_barang');
+    }
+
     public function detail_master_brg($id)
     {
-        $data['title'] = 'Detail Master Barang';
-        $data['master_brg'] = $this->masterBarangModel->where('kode_brg', $id)->first();
-        $data['detail_brg'] = $this->tipeBarangModel->getMaster($id);
-        $data['inv_model'] = $this->InventarisModel;
+        $data['title']        = 'Detail Master Barang';
+        $data['master_brg']   = $this->masterBarangModel->where('kode_brg', $id)->first();
+        $data['detail_brg']   = $this->tipeBarangModel->getMaster($id);
+        $data['inv_model']    = $this->InventarisModel;
         $data['barang_model'] = $this->BarangModel;
         // dd($data['detail_brg']);
         return view('Admin/Master_barang/Detail_brg', $data);
@@ -425,7 +460,7 @@ class Admin extends BaseController
     public function detail_tipe_barang($id)
     {
         $data['title'] = 'Detail Master Barang';
-        $barang = $this->tipeBarangModel->getTipeBarang($id);
+        $barang        = $this->tipeBarangModel->getTipeBarang($id);
         if ($barang['jenis_brg'] == 'inv') {
             $data['detail_brg'] = $this->InventarisModel->detailMaster($id);
         } else {
@@ -439,19 +474,19 @@ class Admin extends BaseController
     public function ubah_master($id)
     {
         $data = [
-            'title' => 'Ubah Master Barang',
+            'title'      => 'Ubah Master Barang',
             'validation' => $this->validation,
-            'master_brg' => $this->masterBarangModel->getMasterInventory($id)
+            'master_brg' => $this->masterBarangModel->getMasterInventory($id),
         ];
         return view('Admin/Master_barang/Edit_barang', $data);
     }
     public function editMaster()
     {
-        $id = $this->request->getPost('kode_brg');
+        $id   = $this->request->getPost('kode_brg');
         $data = [
-            'merk' => $this->request->getPost('merk'),
-            'nama_brg' => $this->request->getPost('nama_brg'),
-            'jenis_brg' => $this->request->getPost('jenis_brg')
+            'merk'      => $this->request->getPost('merk'),
+            'nama_brg'  => $this->request->getPost('nama_brg'),
+            'jenis_brg' => $this->request->getPost('jenis_brg'),
         ];
         $this->masterBarangModel->update($id, $data);
         session()->setFlashdata('pesan', 'Data berhasil diubah');
@@ -462,7 +497,7 @@ class Admin extends BaseController
     public function master_tipe_barang()
     {
         $data = [
-            'title' => 'Master Tipe Barang',
+            'title'       => 'Master Tipe Barang',
             'tipe_barang' => $this->tipeBarangModel->getTipeBarang(),
         ];
         return view('Admin/Tipe_barang/Index', $data);
@@ -470,8 +505,8 @@ class Admin extends BaseController
     public function tambah_tipe_barang()
     {
         $data = [
-            'title' => 'Tambah Tipe Barang',
-            'validation' => $this->validation,
+            'title'         => 'Tambah Tipe Barang',
+            'validation'    => $this->validation,
             'master_barang' => $this->masterBarangModel->findAll(),
         ];
         return view('Admin/Tipe_barang/Tambah_tipe', $data);
@@ -480,7 +515,7 @@ class Admin extends BaseController
     public function simpanTipe()
     {
         $data = [
-            'tipe_barang' => $this->request->getPost('tipe_barang'),
+            'tipe_barang'   => $this->request->getPost('tipe_barang'),
             'master_barang' => $this->request->getPost('kode_brg'),
         ];
         // dd($data);
@@ -493,9 +528,9 @@ class Admin extends BaseController
     public function editTipe($id)
     {
         $data = [
-            'title' => 'Ubah Tipe Barang',
-            'validation' => $this->validation,
-            'tipe_barang' => $this->tipeBarangModel->getTipeBarang($id),
+            'title'         => 'Ubah Tipe Barang',
+            'validation'    => $this->validation,
+            'tipe_barang'   => $this->tipeBarangModel->getTipeBarang($id),
             'master_barang' => $this->masterBarangModel->findAll(),
         ];
         return view('Admin/Tipe_barang/Edit_tipe', $data);
@@ -503,9 +538,9 @@ class Admin extends BaseController
 
     public function updateTipe()
     {
-        $id = $this->request->getPost('id');
+        $id   = $this->request->getPost('id');
         $data = [
-            'tipe_barang' => $this->request->getPost('tipe_barang'),
+            'tipe_barang'   => $this->request->getPost('tipe_barang'),
             'master_barang' => $this->request->getPost('kode_brg'),
         ];
         $this->tipeBarangModel->update($id, $data);
@@ -521,12 +556,12 @@ class Admin extends BaseController
 
         // Kirim pesan modal ke tampilan
         $data['modal_message'] = $modal_message;
-        $this->builder = $this->db->table('inventaris');
+        $this->builder         = $this->db->table('inventaris');
         $this->builder->select('inventaris.*, master_barang.nama_brg, satuan.nama_satuan, master_barang.merk,detail_master.tipe_barang');
         $this->builder->join('detail_master', 'detail_master.detail_master_id = inventaris.id_master_barang');
         $this->builder->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang');
         $this->builder->join('satuan', 'satuan.satuan_id = inventaris.id_satuan');
-        $this->query = $this->builder->get();
+        $this->query        = $this->builder->get();
         $data['inventaris'] = $this->query->getResultArray();
         // dd(  $data['inventaris']);
         $data['validation'] = $this->validation;
@@ -536,193 +571,135 @@ class Admin extends BaseController
         return view('Admin/Inventaris/Index', $data);
     }
 
-   
-
     public function tambah_inv()
     {
         $data = [
-            'validation' => $this->validation,
-            'title' => 'Tambah Barang Inventaris',
-            'satuan' => $this->satuanModel->findAll(),
-            'master_barang' => $this->tipeBarangModel->getMasterInventory(),
+            'validation'    => $this->validation,
+            'title'         => 'Tambah Barang',
+            'satuan'        => $this->satuanModel->findAll(),
+            'master_barang' => $this->tipeBarangModel->getMasterInventory(), // ambil semua barang
         ];
 
         return view('Admin/Inventaris/Tambah_barang', $data);
     }
-    public function generate_qrcode($data_array, $existing_qrcode = null)
+    public function generate_qrcode($data_array)
     {
-        /* Load QR Code Library */
-        // $this->load->library('ciqrcode');
-        if (!isset($data_array['kode_barang'])) {
-            // Tambahkan penanganan error atau kembalikan pesan kesalahan sesuai kebutuhan
-            return ['error' => 'Kode barang atau nama barang tidak ditemukan dalam data'];
+        if (! isset($data_array['kode_barang'])) {
+            return ['error' => 'Kode barang tidak ditemukan dalam data'];
         }
 
-        // $combined_data = implode(',', $data_array);
-        //konvert data kedalam qr-code
+        // Ambil master barang
         $nama_barang = $this->tipeBarangModel->getMasterInventory($data_array['id_master_barang']);
-        // dd($nama_barang);
-
-        $combined_data = "kode barang: " . $data_array['kode_barang'] . "\n";
-        $combined_data .= "Nama barang: " . $nama_barang['nama_brg'] . "\n";
-        $combined_data .= "Tipe barang: " . $nama_barang['tipe_barang'] . "\n";
-        $combined_data .= "Kondisi Barang Saat Didapatkan: " . $data_array['kondisi'] . "\n";
-        $combined_data .= "Merk Barang: " . $nama_barang['merk'] . "\n";
-        $combined_data .= "Spesifiaksi Barang: " . $data_array['spesifikasi'] . "\n";
-        // $combined_data .= "Jumlah Barang: " . $data_array['jumlah_barang'] . "\n";
-        // $combined_data .= "Satuan Barang: " . $data_array['satuan_barang'] . "\n";
-        // $tgl_perolehan = date('d-m-Y', strtotime($data_array['tgl_perolehan']));
-        // $combined_data .= "Tanggal Perolehan Barang: " . $tgl_perolehan;
-
-
-        /* Data */
-        // $hex_data   = bin2hex($combined_data);
-        // $save_name  = $hex_data . '.png';
-
-        /* Generate Slug from Nama Barang */
-        $slug = url_title($data_array['kode_barang'] . '-' . $nama_barang['nama_brg'], '-', true);
-        /* Generate Unique Time Stamp */
-        $time_stamp = time();
-
-        /* Combine Slug and Time Stamp for Unique Barcode */
-        $unique_barcode = $slug . '_' . $time_stamp;
-
-        /* QR Code File Directory Initialize */
-        $dir = 'assets/media/qrcode/';
-        if (!file_exists($dir)) {
-            mkdir($dir, 0775, true);
+        if (! $nama_barang) {
+            throw new \Exception("Data master barang tidak ditemukan untuk ID: " . $data_array['id_master_barang']);
         }
 
-        /* QR Configuration  */
-        $config['cacheable']    = true;
-        $config['imagedir']     = $dir;
-        $config['quality']      = true;
-        $config['size']         = '1024';
-        $config['black']        = [255, 255, 255];
-        $config['white']        = [255, 255, 255];
+        // Gabung data ke QR
+        $combined_data = "Kode Barang: " . $data_array['kode_barang'] . "\n";
+        $combined_data .= "Nama Barang: " . ($nama_barang['nama_brg'] ?? '-') . "\n";
+        $combined_data .= "Tipe Barang: " . ($nama_barang['tipe_barang'] ?? '-') . "\n";
+        $combined_data .= "Kondisi Barang: " . ($data_array['kondisi'] ?? '-') . "\n";
+        $combined_data .= "Merk Barang: " . ($nama_barang['merk'] ?? '-') . "\n";
+        $combined_data .= "Spesifikasi: " . ($data_array['spesifikasi'] ?? '-') . "\n";
 
-        $this->ciqrcode->initialize($config);
-
-        /* QR Data  */
-        $params['data']     = $combined_data;
-        $params['level']    = 'L';
-        $params['size']     = 10;
-
-        // Jika QR Code lama diberikan, hapus file QR Code lama
-        if ($existing_qrcode) {
-            unlink($existing_qrcode);
+        // Slug aman
+        $namaBarang = $nama_barang['nama_brg'] ?? 'noname';
+        $slug       = url_title(($data_array['kode_barang'] ?? 'kd') . '-' . $namaBarang, '-', true);
+        if (empty($slug)) {
+            $slug = 'kd-' . date('YmdHis');
         }
 
-        if (!$existing_qrcode) {
-            // Jika tidak ada QR Code lama, atur nama baru
-            $params['savename'] = FCPATH . $config['imagedir'] . $unique_barcode . '.png';
-        } else {
-            // Jika ada QR Code lama, gunakan nama yang sama
-            $params['savename'] = $existing_qrcode;
+        $unique_barcode = $slug . '_' . time();
+
+        // Direktori simpan
+        $dir = FCPATH . 'assets/media/qrcode/';
+        if (! file_exists($dir)) {
+            mkdir($dir, 0777, true);
         }
-        // $params['savename'] = FCPATH . $config['imagedir'] . $unique_barcode . '.png';
+        $filePath = $dir . $unique_barcode . '.png';
 
-        // $params['savename'] = FCPATH . $config['imagedir'] . $save_name;
+        $qrCode = QrCode::create($combined_data)->setSize(300);
+        $logo   = Logo::create(FCPATH . 'assets/media/qrcode/tkj.png')->setResizeToWidth(60);
 
-        $this->ciqrcode->generate($params);
+        $writer = new PngWriter();
+        $result = $writer->write($qrCode, $logo);
 
-        // Add logo to QR code
-        $this->add_logo_to_qr_code($params['savename'], 'assets/media/qrcode/bps.png');
-        /* Return Data */
+        // Save to file
+        $result->saveToFile($filePath);
+
         return [
             'unique_barcode' => $unique_barcode,
-            'file'   => $dir . $unique_barcode . '.png',
+            'file'           => 'assets/media/qrcode/' . basename($filePath),
         ];
-        return $qrcode;
     }
-
-    public function add_logo_to_qr_code($qr_code_path, $logo_path, $logo_size_percent = 20, $logo_transparency = 100)
-    {
-        // Load QR code image
-        $qr_code = imagecreatefrompng($qr_code_path);
-        $logo = imagecreatefrompng($logo_path);
-
-        // Calculate position for logo in the center of QR code
-        $qr_code_width = imagesx($qr_code);
-        $qr_code_height = imagesy($qr_code);
-        $logo_width = imagesx($logo);
-        $logo_height = imagesy($logo);
-
-        // Hitung ukuran logo yang diubah
-        $new_logo_width = ($qr_code_width * $logo_size_percent) / 100;
-        $new_logo_height = ($new_logo_width / $logo_width) * $logo_height;
-
-        // Tempatkan logo di tengah QR code
-        $x = ($qr_code_width - $new_logo_width) / 2;
-        $y = ($qr_code_height - $new_logo_height) / 2;
-
-        // Ubah ukuran logo
-        $resized_logo = imagecreatetruecolor($new_logo_width, $new_logo_height);
-        imagecopyresampled($resized_logo, $logo, 0, 0, 0, 0, $new_logo_width, $new_logo_height, $logo_width, $logo_height);
-
-        // Tambahkan logo yang diubah ke dalam QR code dengan transparansi
-        imagecopymerge($qr_code, $resized_logo, $x, $y, 0, 0, $new_logo_width, $new_logo_height, $logo_transparency);
-
-        // Simpan hasilnya
-        imagepng($qr_code, $qr_code_path);
-    }
-
 
     public function add_data()
     {
-        
         $data = $this->request->getPost();
-// dd($data);
-        // Node 2: Validasi Form
+
+        // Validasi Form
         $validation = \Config\Services::validation();
         $validation->setRules([
-
             'nama_barang' => [
-                'rules' => 'required|',
-                'errors' => [
-                    'required' => ' wajib diisi.',
-                ],
+                'rules'  => 'required',
+                'errors' => ['required' => ' wajib diisi.'],
             ],
         ]);
+
         // kode barang ymdhis
-        $kode_barang = 'KD-' . date('Ymdhis') . rand(100, 999);
+        $kode_barang   = 'KD-' . date('Ymdhis') . rand(100, 999);
         $master_barang = $this->tipeBarangModel->getMasterInventory($data['nama_barang']);
-        // nama barang berdasrkan id_master_barang
+
         if ($validation->run($data)) {
-            // Node 3: Generate QR Code
+            // Generate QR Code
             $qr_data = [
-                'kode_barang'    => $kode_barang,
+                'kode_barang'      => $kode_barang,
                 'id_master_barang' => $data['nama_barang'],
-                'kondisi'        => $data['kondisi'],
-                'merk'            => $master_barang['merk'],
-                'spesifikasi'            => $data['spesifikasi'],
-                'id_satuan'  => $data['id_satuan'],
-                // 'tgl_perolehan'  => $data['tgl_perolehan'],
+                'kondisi'          => $data['kondisi'],
+                'merk'             => $master_barang['merk'],
+                'spesifikasi'      => $data['spesifikasi'],
+                'id_satuan'        => $data['id_satuan'],
             ];
-            // dd($qr_data);
 
-            // $qrcode_result = $this->generate_qrcode($qr_data);
+            $qrcode_result = $this->generate_qrcode($qr_data);
 
-            // Node 4: Gabungkan QR Code dengan data formulir lainnya
+            // Gabungkan ke insert inventaris
             $dataInsert = [
-                'kode_barang' => $kode_barang,
+                'kode_barang'      => $kode_barang,
                 'id_master_barang' => $data['nama_barang'],
-                'kondisi' => $data['kondisi'],
-                // 'merk' => $data['merk'],
-                'spesifikasi' => $data['spesifikasi'],
-                'lokasi' => $data['lokasi'],
-                'id_satuan' => $data['id_satuan'],
-                // 'tgl_perolehan' => $data['tgl_perolehan'],
-                // 'qrcode' => $qrcode_result['unique_barcode'], // Ganti dengan 'unique_barcode'
-                // 'file' => $qrcode_result['file'],
+                'kondisi'          => $data['kondisi'],
+                'spesifikasi'      => $data['spesifikasi'],
+                'lokasi'           => $data['lokasi'],
+                'id_satuan'        => $data['id_satuan'],
+                'qrcode'           => $qrcode_result['unique_barcode'],
+                'file'             => $qrcode_result['file'],
             ];
-            // dd($dataInsert);
+
             $this->InventarisModel->insert($dataInsert);
+
+            $this->BarangModel->insert([
+                'kode_barang'          => $kode_barang,
+                'id_master_barang'     => $data['nama_barang'],
+                'id_satuan'            => $data['id_satuan'],
+                'stok'                 => $data['stok'] ?? 1,
+                'tanggal_barang_masuk' => date('Y-m-d H:i:s'),
+            ]);
+
+            // 🔥 Tambahkan ke TransaksiBarangModel (histori)
+            $this->TransaksiBarangModel->insert([
+                'kode_barang'          => $kode_barang,
+                'stok'                 => $data['stok'] ?? 1,
+                'tanggal_barang_masuk' => date('Y-m-d H:i:s'),
+                'jumlah_perubahan'     => $data['stok'] ?? 1,
+                'jenis_transaksi'      => 'masuk',
+                'informasi_tambahan'   => 'Inventaris baru ditambahkan',
+            ]);
+            // Insert ke tabel pengecekan
             $dataPengecekan = [
-                'id_inventaris' => $kode_barang,
+                'id_inventaris'      => $kode_barang,
                 'tanggal_pengecekan' => date('Y-m-d'),
-                'keterangan' => $data['kondisi'],
-                'lokasi_lama' => $data['lokasi'],
+                'keterangan'         => $data['kondisi'],
+                'lokasi_lama'        => $data['lokasi'],
             ];
 
             if ($this->pengecekanModel->save($dataPengecekan)) {
@@ -734,15 +711,16 @@ class Admin extends BaseController
             }
         }
     }
+
     public function ubah($id = 0)
     {
 
         session();
         $data = [
-            'title' => "BPS Ubah Data inventaris",
-            'validation' => \Config\Services::validation(),
-            'inventaris' => $this->InventarisModel->getInventaris($id),
-            'satuan' => $this->satuanModel->findAll(),
+            'title'         => "BPS Ubah Data inventaris",
+            'validation'    => \Config\Services::validation(),
+            'inventaris'    => $this->InventarisModel->getInventaris($id),
+            'satuan'        => $this->satuanModel->findAll(),
             'master_barang' => $this->tipeBarangModel->getMasterInventory(),
         ];
         // dd($data);
@@ -758,15 +736,15 @@ class Admin extends BaseController
         $validation->setRules([
 
             'nama_barang'   => [
-                'rules' => 'required',
+                'rules'  => 'required',
                 'errors' => [
                     'required' => 'Nama barang wajib diisi.',
                 ],
             ],
             'tgl_perolehan' => [
-                'rules' => 'required|valid_date',
+                'rules'  => 'required|valid_date',
                 'errors' => [
-                    'required' => 'Tanggal perolehan wajib diisi.',
+                    'required'   => 'Tanggal perolehan wajib diisi.',
                     'valid_date' => 'Format tanggal perolehan tidak valid.',
                 ],
             ],
@@ -777,20 +755,20 @@ class Admin extends BaseController
             // Node 3: Mengambil data inventaris yang sudah ada
             $existingData = $this->InventarisModel->getInventaris($id);
 
-            if (!empty($existingData['qrcode'])) {
+            if (! empty($existingData['qrcode'])) {
                 $this->delete_qrcode($existingData['qrcode']);
             }
 
             // Node 4: Generate new QR Code
             $qr_data = [
-                'kode_barang' => $data['kode_barang'],
+                'kode_barang'      => $data['kode_barang'],
                 'id_master_barang' => $data['nama_barang'], // Ganti 'id_master_barang' dengan 'nama_barang
-                'kondisi' => $data['kondisi'],
-                'merk' => $existingData['merk'],
-                'spesifikasi' => $data['spesifikasi'],
-                'id_satuan' => $data['id_satuan'],
+                'kondisi'          => $data['kondisi'],
+                'merk'             => $existingData['merk'],
+                'spesifikasi'      => $data['spesifikasi'],
+                'id_satuan'        => $data['id_satuan'],
                 // 'jumlah_barang' => $data['jumlah_barang'],
-                'tgl_perolehan' => $data['tgl_perolehan'],
+                'tgl_perolehan'    => $data['tgl_perolehan'],
             ];
 
             // Generate new QR Code
@@ -798,17 +776,17 @@ class Admin extends BaseController
 
             // Node 5: Mengupdate data inventaris
             $this->InventarisModel->update_data($id, [
-                'kode_barang' => $data['kode_barang'],
+                'kode_barang'      => $data['kode_barang'],
                 'id_master_barang' => $data['nama_barang'], // Ganti 'id_master_barang' dengan 'nama_barang
-                'kondisi' => $data['kondisi'],
+                'kondisi'          => $data['kondisi'],
                 // 'merk' => $data['merk'],
-                'spesifikasi' => $data['spesifikasi'],
-                'id_satuan' => $data['id_satuan'],
-                'lokasi' => $data['lokasi'],
+                'spesifikasi'      => $data['spesifikasi'],
+                'id_satuan'        => $data['id_satuan'],
+                'lokasi'           => $data['lokasi'],
                 // 'jumlah_barang' => $data['jumlah_barang'],
-                'tgl_perolehan' => $data['tgl_perolehan'],
-                'qrcode' => $newQrCode['unique_barcode'], // Sesuaikan dengan kembalian generate_qrcode
-                'file' => $newQrCode['file'],
+                'tgl_perolehan'    => $data['tgl_perolehan'],
+                'qrcode'           => $newQrCode['unique_barcode'], // Sesuaikan dengan kembalian generate_qrcode
+                'file'             => $newQrCode['file'],
             ]);
 
             // Node 6: Flashdata pesan disimpan
@@ -829,7 +807,6 @@ class Admin extends BaseController
         // Node 9: Redirect kembali ke formulir dengan input
         return redirect()->back()->withInput();
     }
-
 
     // public function update($id)
     // {
@@ -882,7 +859,7 @@ class Admin extends BaseController
 
     public function detail_inv($id)
     {
-        $data['title'] = 'Detail Barang Ienventaris'; // Pindahkan ini ke atas agar tidak terjadi override
+        $data['title'] = 'Detail Barang Ienventaris';    // Pindahkan ini ke atas agar tidak terjadi override
         $this->builder = $this->db->table('inventaris'); // Gunakan $this->builder untuk mengakses builder
 
         $this->builder->select('inventaris.*, master_barang.nama_brg, satuan.nama_satuan, master_barang.merk, detail_master.tipe_barang');
@@ -890,7 +867,7 @@ class Admin extends BaseController
         $this->builder->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang');
         $this->builder->join('satuan', 'satuan.satuan_id = inventaris.id_satuan');
         $this->builder->where('inventaris.kode_barang', $id);
-        $query = $this->builder->get();
+        $query              = $this->builder->get();
         $data['inventaris'] = $query->getRow();
 
         if (empty($data['inventaris'])) {
@@ -923,7 +900,7 @@ class Admin extends BaseController
         $this->InventarisModel->delete($id);
 
         // Set flashdata berdasarkan status penghapusan
-        $flashdataKey = ($this->db->affectedRows() > 0) ? 'PesanBerhasil' : 'PesanGagal';
+        $flashdataKey     = ($this->db->affectedRows() > 0) ? 'PesanBerhasil' : 'PesanGagal';
         $flashdataMessage = ($this->db->affectedRows() > 0) ? 'Data Anda Berhasil Dihapus' : 'Gagal Menghapus Data';
 
         session()->setFlashdata($flashdataKey, $flashdataMessage);
@@ -937,7 +914,7 @@ class Admin extends BaseController
     public function atk()
     {
         $data = [
-            'title' => 'BPS - Barang',
+            'title'   => 'BPS - Barang',
             'barangs' => $this->BarangModel
                 ->join('detail_master', 'detail_master.detail_master_id = barang.id_master_barang')
                 ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
@@ -959,10 +936,9 @@ class Admin extends BaseController
         });
 
         $data = [
-            'title' => 'BPS - Barang',
+            'title'   => 'BPS - Barang',
             'barangs' => $barangsNotRestored,
         ];
-
 
         return view('Admin/Barang/Soft_deleted', $data);
     }
@@ -971,9 +947,9 @@ class Admin extends BaseController
     {
         // Tampilkan form tambah stok
         $data = [
-            'validation' => $this->validation,
-            'title' => 'Tambah Barang ',
-            'satuan' => $this->satuanModel->findAll(),
+            'validation'    => $this->validation,
+            'title'         => 'Tambah Barang ',
+            'satuan'        => $this->satuanModel->findAll(),
             'master_barang' => $this->tipeBarangModel->getMasterAtk(),
         ];
 
@@ -986,16 +962,16 @@ class Admin extends BaseController
         $this->validation->setRules([
 
             'stok' => [
-                'rules' => 'required|numeric|greater_than[0]',
+                'rules'  => 'required|numeric|greater_than[0]',
                 'errors' => [
-                    'required' => 'Stok wajib diisi.',
-                    'numeric' => 'Stok harus berupa angka.',
+                    'required'     => 'Stok wajib diisi.',
+                    'numeric'      => 'Stok harus berupa angka.',
                     'greater_than' => 'Stok harus lebih besar dari 0.',
                 ],
             ],
         ]);
 
-        if (!$this->validation->withRequest($this->request)->run()) {
+        if (! $this->validation->withRequest($this->request)->run()) {
             // Node 1: Ambil pesan kesalahan
             $errors = $this->validation->getErrors();
 
@@ -1010,10 +986,10 @@ class Admin extends BaseController
 
         // Simpan data barang ke database
         $data = [
-            'id_master_barang' => $this->request->getPost('nama_barang'),
+            'id_master_barang'     => $this->request->getPost('nama_barang'),
             // 'merk' => $this->request->getPost('merk'),
-            'id_satuan' => $this->request->getPost('satuan_barang'),
-            'stok' => $this->request->getPost('stok'),
+            'id_satuan'            => $this->request->getPost('satuan_barang'),
+            'stok'                 => $this->request->getPost('stok'),
             'tanggal_barang_masuk' => date('Y-m-d H:i:s'), // Tambahkan waktu saat ini
         ];
         // dd($data);
@@ -1026,13 +1002,13 @@ class Admin extends BaseController
 
         // Masukkan data ke tabel transaksi_barang
         $this->TransaksiBarangModel->insert([
-            'kode_barang' => $kodeBarang,
-            'stok' => $data['stok'],
+            'kode_barang'          => $kodeBarang,
+            'stok'                 => $data['stok'],
             'tanggal_barang_masuk' => $data['tanggal_barang_masuk'],
-            'jumlah_perubahan' => $data['stok'],
-            'jenis_transaksi' => 'masuk',
-            'informasi_tambahan' => 'Penambahan stok.',
-            'tanggal_perubahan' => $data['tanggal_barang_masuk'],
+            'jumlah_perubahan'     => $data['stok'],
+            'jenis_transaksi'      => 'masuk',
+            'informasi_tambahan'   => 'Penambahan stok.',
+            'tanggal_perubahan'    => $data['tanggal_barang_masuk'],
         ]);
 
         // Tampilkan pesan sukses atau error
@@ -1077,7 +1053,6 @@ class Admin extends BaseController
         //     'tanggal_perubahan' => $data['tanggal_barang_masuk'],
         // ]);
 
-
         // // Tampilkan pesan sukses atau error
         // session()->setFlashdata('msg', 'Data barang berhasil ditambahkan.');
         // return redirect()->to('/admin/atk');
@@ -1112,9 +1087,6 @@ class Admin extends BaseController
         }
     }
 
-
-
-
     // public function restoreSoftDelete($kode_barang)
     // {
     //     $barangModel = new BarangModel();
@@ -1134,9 +1106,9 @@ class Admin extends BaseController
 
         // Kirim data ke view
         $data['title'] = 'Riawayat Stok ';
-        $data = [
+        $data          = [
             'barangMasuk' => $barangMasuk,
-            'title' => 'Barang',
+            'title'       => 'Barang',
         ];
 
         return view('Admin/Barang/Barang_masuk', $data);
@@ -1159,18 +1131,18 @@ class Admin extends BaseController
     public function formTambahStok($kodeBarang)
     {
         $barangModel = new BarangModel();
-        $barang = $barangModel->where('kode_barang', $kodeBarang)->first();
+        $barang      = $barangModel->where('kode_barang', $kodeBarang)->first();
 
-        if (!$barang) {
+        if (! $barang) {
             return redirect()->to('/admin/atk')->with('error-msg', 'Barang tidak ditemukan.');
         }
 
         $data = [
-            'barang' => $barang,
+            'barang'      => $barang,
             'kode_barang' => $kodeBarang,
-            'stok' => $barang['stok'],
-            'validation' => $this->validation,
-            'title' => 'Tambah Stok',
+            'stok'        => $barang['stok'],
+            'validation'  => $this->validation,
+            'title'       => 'Tambah Stok',
         ];
 
         return view('Admin/Barang/Tambah_stok', $data);
@@ -1178,22 +1150,22 @@ class Admin extends BaseController
 
     public function tambahStok($kodeBarang)
     {
-        $barangModel = new BarangModel();
+        $barangModel          = new BarangModel();
         $TransaksiBarangModel = new TransaksiBarangModel();
 
         // Mendapatkan data barang
         $barang = $barangModel->where('kode_barang', $kodeBarang)->first();
 
-        if (!$barang) {
+        if (! $barang) {
             // Tampilkan pesan kesalahan atau redirect ke halaman lain jika perlu
             return redirect()->to('/Admin')->with('error-msg', 'Barang tidak ditemukan.');
         }
 
         // Mendapatkan data dari form
         $jumlahPenambahanStok = (int) $this->request->getPost('jumlah_penambahan_stok');
-        $tanggalBarangMasuk = $this->request->getPost('tanggal_barang_masuk');
-        // $namaBarang = $barang['nama_barang']; // Menggunakan nama_barang dari data barang
-        $stok = $barang['stok']; // Menggunakan jenis_barang dari data barang
+        $tanggalBarangMasuk   = $this->request->getPost('tanggal_barang_masuk');
+                                     // $namaBarang = $barang['nama_barang']; // Menggunakan nama_barang dari data barang
+        $stok     = $barang['stok']; // Menggunakan jenis_barang dari data barang
         $stokBaru = $barang['stok'] + $jumlahPenambahanStok;
 
         // Update stok pada tabel barang
@@ -1203,13 +1175,13 @@ class Admin extends BaseController
 
         // Masukkan data ke tabel transaksi_barang
         $TransaksiBarangModel->insert([
-            'kode_barang' => $kodeBarang,
-            'stok' => $stok,
+            'kode_barang'          => $kodeBarang,
+            'stok'                 => $stok,
             'tanggal_barang_masuk' => $tanggalBarangMasuk,
-            'jumlah_perubahan' => $jumlahPenambahanStok,
-            'jenis_transaksi' => 'masuk',
-            'informasi_tambahan' => 'Penambahan stok melalui form tambah stok.',
-            'tanggal_perubahan' => $tanggalBarangMasuk,
+            'jumlah_perubahan'     => $jumlahPenambahanStok,
+            'jenis_transaksi'      => 'masuk',
+            'informasi_tambahan'   => 'Penambahan stok melalui form tambah stok.',
+            'tanggal_perubahan'    => $tanggalBarangMasuk,
         ]);
 
         // Set pesan sukses dan redirect
@@ -1220,21 +1192,21 @@ class Admin extends BaseController
     public function formKurangStok($kodeBarang)
     {
         $barangModel = new BarangModel();
-        $barang = $barangModel->where('kode_barang', $kodeBarang)->first();
+        $barang      = $barangModel->where('kode_barang', $kodeBarang)->first();
 
         // Pastikan barang ditemukan sebelum melanjutkan
-        if (!$barang) {
+        if (! $barang) {
             // Tampilkan pesan kesalahan atau redirect ke halaman lain jika perlu
             return redirect()->to('/Admin/atk')->with('error-msg', 'Barang tidak ditemukan.');
         }
 
         // Kirim data ke view, termasuk nilai stok
         $data = [
-            'barang' => $barang,
+            'barang'     => $barang,
             'kodeBarang' => $kodeBarang,
-            'stok' => $barang['stok'], // Inisialisasi variabel stok
+            'stok'       => $barang['stok'], // Inisialisasi variabel stok
             'validation' => $this->validation,
-            'title' => 'Kurang Barang',
+            'title'      => 'Kurang Barang',
         ];
 
         return view('Admin/Barang/Kurang_stok', $data);
@@ -1242,22 +1214,22 @@ class Admin extends BaseController
 
     public function kurangiStok($kodeBarang)
     {
-        $barangModel = new BarangModel();
+        $barangModel          = new BarangModel();
         $TransaksiBarangModel = new TransaksiBarangModel();
 
         // Mendapatkan data barang
         $barang = $barangModel->where('kode_barang', $kodeBarang)->first();
 
-        if (!$barang) {
+        if (! $barang) {
             // Tampilkan pesan kesalahan atau redirect ke halaman lain jika perlu
             return redirect()->to('/Admin/atk')->with('error-msg', 'Barang tidak ditemukan.');
         }
 
         // Mendapatkan data dari form
         $jumlahPenguranganStok = (int) $this->request->getPost('jumlah_pengurangan_stok');
-        $tanggalBarangKeluar = $this->request->getPost('tanggal_barang_keluar');
-        $stok = $barang['stok']; // Menggunakan jenis_barang dari data barang
-        $stokBaru = max(0, $stok - $jumlahPenguranganStok);
+        $tanggalBarangKeluar   = $this->request->getPost('tanggal_barang_keluar');
+        $stok                  = $barang['stok']; // Menggunakan jenis_barang dari data barang
+        $stokBaru              = max(0, $stok - $jumlahPenguranganStok);
 
         // Update stok pada tabel barang
         $barangModel->update($barang['kode_barang'], [
@@ -1266,13 +1238,13 @@ class Admin extends BaseController
 
         // Masukkan data ke tabel transaksi_barang
         $TransaksiBarangModel->insert([
-            'kode_barang' => $kodeBarang,
-            'stok' => $stok,
+            'kode_barang'           => $kodeBarang,
+            'stok'                  => $stok,
             'tanggal_barang_keluar' => $tanggalBarangKeluar,
-            'jumlah_perubahan' => $jumlahPenguranganStok,
-            'jenis_transaksi' => 'keluar',
-            'informasi_tambahan' => 'Pengurangan stok melalui form kurang stok.',
-            'tanggal_perubahan' => $tanggalBarangKeluar,
+            'jumlah_perubahan'      => $jumlahPenguranganStok,
+            'jenis_transaksi'       => 'keluar',
+            'informasi_tambahan'    => 'Pengurangan stok melalui form kurang stok.',
+            'tanggal_perubahan'     => $tanggalBarangKeluar,
         ]);
 
         // Set pesan sukses dan redirect
@@ -1294,9 +1266,8 @@ class Admin extends BaseController
 
         $data = [
             'transaksi_barang' => $this->query->getResultArray(),
-            'title' => 'Daftar Transaksi Barang Masuk',
+            'title'            => 'Daftar Transaksi Barang Masuk',
         ];
-
 
         return view('Admin/Barang/Barang_masuk', $data);
     }
@@ -1315,7 +1286,7 @@ class Admin extends BaseController
 
         $data = [
             'transaksi_barang' => $this->query->getResultArray(),
-            'title' => 'Daftar Transaksi Barang Keluar',
+            'title'            => 'Daftar Transaksi Barang Keluar',
         ];
 
         return view('Admin/Barang/Barang_keluar', $data);
@@ -1350,7 +1321,7 @@ class Admin extends BaseController
         }
 
         $transaksiBarangModel = new TransaksiBarangModel();
-        $data['atk'] = $transaksiBarangModel
+        $data['atk']          = $transaksiBarangModel
             ->withDeleted()
             ->select('transaksi_barang.*, satuan.nama_satuan, master_barang.nama_brg, barang.id_master_barang, barang.id_satuan, master_barang.merk,detail_master.tipe_barang')
             ->join('barang', 'transaksi_barang.kode_barang = barang.kode_barang')
@@ -1380,9 +1351,9 @@ class Admin extends BaseController
         // // Tampilkan atau unduh PDF
         // $dompdf->stream('Data_ATK.pdf', array('Attachment' => false));
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_barangMasuk', $data);
+        $html                  = view('Admin/Laporan/Lap_barangMasuk', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -1394,7 +1365,6 @@ class Admin extends BaseController
         ];
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
-
 
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
@@ -1428,16 +1398,15 @@ class Admin extends BaseController
             ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
 
             ->join('satuan', 'barang.id_satuan = satuan.satuan_id')
-            ->where('transaksi_barang.tanggal_barang_keluar >=', $tanggalMulai . ' 00:00:00')  // Mengatur kondisi where untuk tanggal mulai
-            ->where('transaksi_barang.tanggal_barang_keluar <=', $tanggalAkhir . ' 23:59:59')  // Mengatur kondisi where untuk tanggal akhir
+            ->where('transaksi_barang.tanggal_barang_keluar >=', $tanggalMulai . ' 00:00:00') // Mengatur kondisi where untuk tanggal mulai
+            ->where('transaksi_barang.tanggal_barang_keluar <=', $tanggalAkhir . ' 23:59:59') // Mengatur kondisi where untuk tanggal akhir
             ->findAll();
 
-
-        $data['tanggalMulai'] = $tanggalMulai; // Add this line
-        $data['tanggalAkhir'] = $tanggalAkhir;
-        $mpdf = new \Mpdf\Mpdf();
+        $data['tanggalMulai']  = $tanggalMulai; // Add this line
+        $data['tanggalAkhir']  = $tanggalAkhir;
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_barangKeluar', $data);
+        $html                  = view('Admin/Laporan/Lap_barangKeluar', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -1449,7 +1418,6 @@ class Admin extends BaseController
         ];
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
-
 
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
@@ -1480,15 +1448,15 @@ class Admin extends BaseController
 
         $this->builder = $this->db->table('permintaan_barang');
         $this->builder->select('*');
-        $this->query = $this->builder->get();
+        $this->query        = $this->builder->get();
         $data['permintaan'] = $this->query->getResultArray();
         // dd(  $data['inventaris']);
         $data['title'] = 'Permintaan Barang';
         return view('Admin/Permintaan_barang/Index', $data);
     }
-  public function list_permintaan($id)
+    public function list_permintaan($id)
     {
-        $data['detail'] = $this->PermintaanModel->getPermintaan($id);
+        $data['detail']     = $this->PermintaanModel->getPermintaan($id);
         $data['permintaan'] = $this->detailPermintaanModel
             ->select('detail_permintaan_barang.*, master_barang.nama_brg, satuan.nama_satuan,permintaan_barang.tanggal_permintaan, master_barang.merk,detail_master.tipe_barang')
             ->join('barang', 'barang.kode_barang = detail_permintaan_barang.kode_barang')
@@ -1505,38 +1473,38 @@ class Admin extends BaseController
     public function permintaan_masuk()
     {
         $permintaan = $this->detailPermintaanModel->getDetailPermintaan();
-        $data = [
+        $data       = [
             'permintaan' => $permintaan,
-            'title' => 'Daftar permintaan - Masuk',
+            'title'      => 'Daftar permintaan - Masuk',
         ];
         return view('Admin/Permintaan_barang/Permintaan_masuk', $data);
     }
     public function permintaan_proses()
     {
         $permintaan = $this->detailPermintaanModel->getPermintaanProses();
-        $data = [
+        $data       = [
             'permintaan' => $permintaan,
-            'title' => 'Daftar permintaan - Masuk',
+            'title'      => 'Daftar permintaan - Masuk',
         ];
         return view('Admin/Permintaan_barang/Permintaan_masuk', $data);
     }
     public function permintaan_selesai()
     {
         $permintan = $this->detailPermintaanModel->getPermintaanSelesai();
-        $data = [
+        $data      = [
             'permintaan' => $permintan,
-            'title' => 'Daftar permintaan - Masuk',
+            'title'      => 'Daftar permintaan - Masuk',
         ];
         return view('Admin/Permintaan_barang/Permintaan_masuk', $data);
     }
     public function prosesPermintaan($id)
     {
         $date =
-            $this->detailPermintaanModel->update($id, [
-                'tanggal_diproses' => date("Y-m-d h:i:s"),
-                'status' => 'diproses',
+        $this->detailPermintaanModel->update($id, [
+            'tanggal_diproses' => date("Y-m-d h:i:s"),
+            'status'           => 'diproses',
 
-            ]);
+        ]);
         session()->setFlashdata('msg', 'Status permintaan berhasil Diubah');
         return redirect()->to('Admin/detailpermin/' . $id);
     }
@@ -1546,8 +1514,8 @@ class Admin extends BaseController
 
         $this->detailPermintaanModel->update($id, [
             'tanggal_selesai' => date("Y-m-d h:i:s"),
-            'status' => 'selesai',
-            'status_akhir' => 'diterima',
+            'status'          => 'selesai',
+            'status_akhir'    => 'diterima',
 
         ]);
         session()->setFlashdata('msg', 'Status permntaan berhasil Diubah');
@@ -1556,14 +1524,14 @@ class Admin extends BaseController
     public function simpanBalasan($id)
     {
         $rules = [
-            'kategori' => [
-                'rules' => 'required',
+            'kategori'           => [
+                'rules'  => 'required',
                 'errors' => [
                     'required' => 'Kategori  wajib diisi.',
                 ],
             ],
             'balasan_permintaan' => [
-                'rules' => 'required',
+                'rules'  => 'required',
                 'errors' => [
                     'required' => 'Isi Balasan wajib diisi.',
 
@@ -1572,20 +1540,20 @@ class Admin extends BaseController
 
         ];
 
-        if (!$this->validate($rules)) {
+        if (! $this->validate($rules)) {
             $validation = \Config\Services::validation();
             return redirect()->to('/Admin/detail/' . $id)->withInput('validation', $validation);
         }
         $this->PermintaanModel->update($id, [
             'tanggal_selesai' => date("Y-m-d h:i:s"),
-            'status' => 'selesai',
-            'status_akhir' => 'ditolak',
+            'status'          => 'selesai',
+            'status_akhir'    => 'ditolak',
 
         ]);
         $data = [
             'id_permintaan_barang' => $id,
-            'kategori' => $this->request->getPost('kategori'),
-            'balasan_permintaan' => $this->request->getPost('balasan_permintaan'),
+            'kategori'             => $this->request->getPost('kategori'),
+            'balasan_permintaan'   => $this->request->getPost('balasan_permintaan'),
 
         ];
         $this->BalasanModel->save($data);
@@ -1595,7 +1563,7 @@ class Admin extends BaseController
     public function detailpermin($id)
     {
         $barangList = $this->BarangModel->findAll();
-        $data = $this->detailPermintaanModel->getDetailPermintaan($id);
+        $data       = $this->detailPermintaanModel->getDetailPermintaan($id);
 
         $d = $this->db->table('balasan_permintaan');
         $d->select('*');
@@ -1605,9 +1573,9 @@ class Admin extends BaseController
         // dd($query1);
         $ex = [
 
-            'detail' => $data,
-            'title' => 'Detail permintaan',
-            'balasan' => $balasan,
+            'detail'     => $data,
+            'title'      => 'Detail permintaan',
+            'balasan'    => $balasan,
             'barangList' => $barangList,
             'validation' => \Config\Services::validation(),
 
@@ -1633,7 +1601,7 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Format tanggal tidak valid atau tanggal mulai melebihi tanggal akhir.');
         }
 
-        $permintaanModel = new PermintaanModel();
+        $permintaanModel    = new PermintaanModel();
         $data['permintaan'] = $permintaanModel
             ->select('id_user, kode_barang, id_balasan_permintaan, nama_pengaju, perihal, detail, tanggal_pengajuan, tanggal_diproses, tanggal_selesai, status, status_akhir')
             ->where('tanggal_pengajuan >=', $tanggalMulai . ' 00:00:00')
@@ -1641,7 +1609,7 @@ class Admin extends BaseController
             ->findAll();
 
         // Load library DomPDF
-        $dompdf = new \Dompdf\Dompdf();
+        $dompdf  = new \Dompdf\Dompdf();
         $options = new \Dompdf\Options();
         $options->setIsHtml5ParserEnabled(true);
         $options->setIsPhpEnabled(true);
@@ -1656,7 +1624,7 @@ class Admin extends BaseController
         $dompdf->render();
 
         // Tampilkan atau unduh PDF
-        $dompdf->stream('Data.pdf', array('Attachment' => false));
+        $dompdf->stream('Data.pdf', ['Attachment' => false]);
     }
     // public function print() // all data
     // {
@@ -1686,11 +1654,10 @@ class Admin extends BaseController
         $this->builder = $this->db->table('pengadaan_barang');
         $this->builder->select('*');
         $this->builder->where('id_user', user()->id);
-        $this->query = $this->builder->get();
+        $this->query       = $this->builder->get();
         $data['pengadaan'] = $this->query->getResultArray();
         // dd(  $data['inventaris']);
         $data['title'] = 'Pengadaan Barang';
-
 
         return view('Admin/Pengadaan/Index', $data);
     }
@@ -1699,7 +1666,7 @@ class Admin extends BaseController
     {
         $data = [
             'validation' => $this->validation,
-            'title' => 'Tambah Pengadaan Barang',
+            'title'      => 'Tambah Pengadaan Barang',
 
         ];
         return view('Admin/Pengadaan/Tambah_pengadaan', $data);
@@ -1712,24 +1679,24 @@ class Admin extends BaseController
         // post to pengadaan
         $id_pengadaan = 'PG-' . date('Ymdhis') . rand(100, 999);
         $this->PengadaanModel->save([
-             'id_user' => user()->id,
+            'id_user'             => user()->id,
             'pengadaan_barang_id' => $id_pengadaan,
-            'tanggal_pengadaan' => date("Y/m/d"),
-            'tahun_periode' => $data['tahun_periode'],
+            'tanggal_pengadaan'   => date("Y/m/d"),
+            'tahun_periode'       => $data['tahun_periode'],
 
         ]);
         // get id_pengadaan
         for ($i = 0; $i < count($data['nama_barang']); $i++) {
             $this->detailPengadaanModel->save([
                 'id_pengadaan_barang' => $id_pengadaan,
-                'nama_barang' => $data['nama_barang'][$i],
-                'jumlah' => $data['jumlah'][$i],
-                'spesifikasi' => $data['spesifikasi'][$i],
-                'alasan_pengadaan' => $data['alasan_pengadaan'][$i],
-                'nama_pengaju' => user()->username,
-                'tgl_pengajuan' => date("Y/m/d h:i:s"),
-               
-                'status' => 'belum diproses',
+                'nama_barang'         => $data['nama_barang'][$i],
+                'jumlah'              => $data['jumlah'][$i],
+                'spesifikasi'         => $data['spesifikasi'][$i],
+                'alasan_pengadaan'    => $data['alasan_pengadaan'][$i],
+                'nama_pengaju'        => user()->username,
+                'tgl_pengajuan'       => date("Y/m/d h:i:s"),
+
+                'status'              => 'belum diproses',
             ]);
             // dd($data);
         }
@@ -1749,18 +1716,16 @@ class Admin extends BaseController
         return redirect()->to('/Admin/pengadaan');
     }
 
-
-
     public function editPengadaan($id)
     {
         $validation = \Config\Services::validation();
 
-        $data['pengadaan'] = $this->detailPengadaanModel->getDetailPengadaan($id);
-        $data['validation'] = $validation; // Pass the validation service to the view
-        $data['title'] = 'Ubah Pengadaan'; // Pass the validation service to the view
+        $data['pengadaan']  = $this->detailPengadaanModel->getDetailPengadaan($id);
+        $data['validation'] = $validation;      // Pass the validation service to the view
+        $data['title']      = 'Ubah Pengadaan'; // Pass the validation service to the view
 
         // Cek apakah pengadaan dengan id tersebut ditemukan
-        if (!$data['pengadaan']) {
+        if (! $data['pengadaan']) {
             // Redirect atau tampilkan pesan error jika tidak ditemukan
             return redirect()->to('/Admin/pengadaan')->with('pesanError', 'Pengadaan tidak ditemukan');
         }
@@ -1772,9 +1737,9 @@ class Admin extends BaseController
     public function updatePengadaan($id)
     {
         // Validasi input
-        if (!$this->validate([
+        if (! $this->validate([
             'alasan_pengadaan' => [
-                'rules' => 'required',
+                'rules'  => 'required',
                 'errors' => [
                     'required' => 'alasan_pengadaan wajib di isi',
                 ],
@@ -1789,18 +1754,18 @@ class Admin extends BaseController
         $pengadaan = $this->detailPengadaanModel->getDetailPengadaan($id);
 
         // Cek apakah pengadaan dengan id tersebut ditemukan
-        if (!$pengadaan) {
+        if (! $pengadaan) {
             // Redirect atau tampilkan pesan error jika tidak ditemukan
             return redirect()->to('/Admin/pengadaan')->with('pesanError', 'Pengadaan tidak ditemukan');
         }
 
         // Persiapkan data untuk disimpan
         $dataPengadaan = [
-            'nama_barang' => $this->request->getPost('nama_barang'),
-            'jumlah' => $this->request->getPost('jumlah'),
-            'spesifikasi' => $this->request->getPost('spesifikasi'),
+            'nama_barang'      => $this->request->getPost('nama_barang'),
+            'jumlah'           => $this->request->getPost('jumlah'),
+            'spesifikasi'      => $this->request->getPost('spesifikasi'),
             'alasan_pengadaan' => $this->request->getPost('alasan_pengadaan'),
-            'nama_pengaju' => user()->username,
+            'nama_pengaju'     => user()->username,
         ];
 
         // Update data ke database
@@ -1824,9 +1789,9 @@ class Admin extends BaseController
         // dd($query1);
         $ex = [
 
-            'detail' => $data,
-            'title' => 'Detail Pengadaan',
-            'balasan' => $balasan,
+            'detail'     => $data,
+            'title'      => 'Detail Pengadaan',
+            'balasan'    => $balasan,
             'validation' => \Config\Services::validation(),
 
         ];
@@ -1837,13 +1802,13 @@ class Admin extends BaseController
     public function detailPengadaan($id)
     {
 
-        $dataPengadaan = $this->PengadaanModel->getPengadaan($id);
+        $dataPengadaan     = $this->PengadaanModel->getPengadaan($id);
         $detail_pengadaaan = $this->detailPengadaanModel->where('id_pengadaan_barang', $id)->findAll();
 
         $ex = [
 
-            'title' => 'Detail Pengadaan Barang',
-            'detail' => $dataPengadaan,
+            'title'             => 'Detail Pengadaan Barang',
+            'detail'            => $dataPengadaan,
             'detail_pengadaaan' => $detail_pengadaaan,
 
         ];
@@ -1864,10 +1829,10 @@ class Admin extends BaseController
     {
         $data = [
             'pengadaan' => $this->PengadaanModel->getAll(),
-            'title' => 'Cetak Data',
+            'title'     => 'Cetak Data',
         ];
 
-        $dompdf = new \Dompdf\Dompdf();
+        $dompdf  = new \Dompdf\Dompdf();
         $options = new \Dompdf\Options();
         $options->setIsRemoteEnabled(true);
 
@@ -1877,14 +1842,14 @@ class Admin extends BaseController
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
         ini_set('max_execution_time', 0);
-        $dompdf->stream('Data.pdf', array("Attachment" => false));
+        $dompdf->stream('Data.pdf', ["Attachment" => false]);
     }
     public function eksporPB($id) //detail permintaan
     {
         // $aduan = $this->pengaduan->where(['id' => $id])->first();
         // $id = $id;
         // $data['detail']   = $aduan;
-        $data['title'] = 'cetak';
+        $data['title']  = 'cetak';
         $data['detail'] = $this->PengadaanModel->where(['id' => $id])->first();
 
         //Cetak dengan dompdf
@@ -1898,7 +1863,7 @@ class Admin extends BaseController
         $dompdf->loadHtml(view('user/pengadaan/cetakid', $data));
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
-        $dompdf->stream('Detail Pengadaan.pdf', array("Attachment" => false));
+        $dompdf->stream('Detail Pengadaan.pdf', ["Attachment" => false]);
     }
     //Akhir Pengadaan
     // AKhir
@@ -1966,7 +1931,7 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Format tanggal tidak valid atau tanggal mulai melebihi tanggal akhir.');
         }
 
-        $pengadaanModel = new PengadaanModel();
+        $pengadaanModel    = new PengadaanModel();
         $data['pengadaan'] = $pengadaanModel
             ->select('id, id_user, id_balasan_pengadaan, nama_pengaju, nama_barang, spesifikasi, jumlah, tahun_periode, alasan_pengadaan, tgl_pengajuan, tgl_proses, tgl_selesai, status, status_akhir')
             ->where('tgl_pengajuan >=', $tanggalMulai . ' 00:00:00')
@@ -1975,10 +1940,9 @@ class Admin extends BaseController
         $data['tanggalMulai'] = $tanggalMulai; // Add this line
         $data['tanggalAkhir'] = $tanggalAkhir;
 
-
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_pengadaan', $data);
+        $html                  = view('Admin/Laporan/Lap_pengadaan', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -1990,7 +1954,6 @@ class Admin extends BaseController
         ];
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
-
 
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
@@ -2146,11 +2109,9 @@ class Admin extends BaseController
     //         $pdf->Cell(40, 10, $row['deleted_at'], 1);
     //     }
 
-
     //     // Simpan atau keluarkan PDF
     //     $pdf->Output('Data_Inventaris.pdf', 'I');
     //     exit;
-
 
     // }
 
@@ -2173,7 +2134,7 @@ class Admin extends BaseController
         }
 
         $inventarisModel = new InventarisModel(); // Ganti dengan nama model yang sesuai
-        $this->builder = $this->db->table('inventaris');
+        $this->builder   = $this->db->table('inventaris');
         $this->builder->select('inventaris.*, master_barang.nama_brg, satuan.nama_satuan, master_barang.merk, detail_master.tipe_barang');
         $this->builder->join('detail_master', 'detail_master.detail_master_id = inventaris.id_master_barang');
         $this->builder->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang');
@@ -2183,9 +2144,9 @@ class Admin extends BaseController
 
         $data['inventaris'] = $this->builder->get()->getResultArray();
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_qr', $data);
+        $html                  = view('Admin/Laporan/Lap_qr', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -2207,7 +2168,7 @@ class Admin extends BaseController
     {
         ini_set('max_execution_time', 0);
 
-        $data['title'] = 'cetak';
+        $data['title']      = 'cetak';
         $data['inventaris'] = $this->InventarisModel->where(['kode_barang' => $id])->first();
 
         if (empty($data['inventaris'])) {
@@ -2215,9 +2176,9 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Data not found for kode_barang: ' . $id);
         }
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Kode_qr', $data);
+        $html                  = view('Admin/Laporan/Kode_qr', $data);
         $mpdf->setAutoPageBreak(true);
 
         $options = [
@@ -2233,10 +2194,9 @@ class Admin extends BaseController
         $mpdf->Output('Lap_QR_Inventaris_Barang.pdf', 'I');
     }
 
-
     public function cetakPengadaan($kode_pengadaan)
     {
-        $pengadaanModel = new PengadaanModel();
+        $pengadaanModel    = new PengadaanModel();
         $data['pengadaan'] = $pengadaanModel
             ->select('*')
             ->where('pengadaan_barang_id', $kode_pengadaan)
@@ -2247,16 +2207,16 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Data not found for kode_pengadaan: ' . $kode_pengadaan);
         }
 
-        $detailPengadaan = new DetailPengadaanModel();
+        $detailPengadaan          = new DetailPengadaanModel();
         $data['detail_pengadaan'] = $detailPengadaan
             ->select('detail_pengadaan_barang.*, pengadaan_barang.tahun_periode, pengadaan_barang.tanggal_pengadaan')
             ->join('pengadaan_barang', 'pengadaan_barang.pengadaan_barang_id = detail_pengadaan_barang.id_pengadaan_barang')
             ->where('id_pengadaan_barang', $kode_pengadaan)
             ->findAll();
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/cetak_pengadaan', $data);
+        $html                  = view('Admin/Laporan/cetak_pengadaan', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -2268,7 +2228,6 @@ class Admin extends BaseController
         ];
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
-
 
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
@@ -2293,7 +2252,7 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Format tanggal tidak valid atau tanggal mulai melebihi tanggal akhir.');
         }
 
-        $inventarisModel = new InventarisModel(); // Ganti dengan nama model yang sesuai
+        $inventarisModel    = new InventarisModel(); // Ganti dengan nama model yang sesuai
         $data['inventaris'] = $inventarisModel
             ->select('inventaris.*,master_barang.nama_brg, satuan.nama_satuan, master_barang.merk')
             ->join('detail_master', 'detail_master.detail_master_id = inventaris.id_master_barang')
@@ -2303,14 +2262,13 @@ class Admin extends BaseController
             // ->where('inventaris.tgl_perolehan <=', $tanggalAkhir . ' 23:59:59')
             // tangal peminjaman
             ->findAll();
-        // dd($data['inventaris']);
+                                               // dd($data['inventaris']);
         $data['tanggalMulai'] = $tanggalMulai; // Add this line
         $data['tanggalAkhir'] = $tanggalAkhir;
 
-
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_inventaris', $data);
+        $html                  = view('Admin/Laporan/Lap_inventaris', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -2323,12 +2281,10 @@ class Admin extends BaseController
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
 
-
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
         $mpdf->Output('Lap Inventaris Barang.pdf', 'I');
     }
-
 
     //laporan inventaris
 
@@ -2358,7 +2314,7 @@ class Admin extends BaseController
         if ($dateMulai === false || $dateAkhir === false || $dateMulai > $dateAkhir) {
             return redirect()->to(base_url('Admin'))->with('error', 'Format tanggal tidak valid atau tanggal mulai melebihi tanggal akhir.');
         }
-        $barangModel = new BarangModel();
+        $barangModel    = new BarangModel();
         $data['barang'] = $barangModel
             ->select('barang.*,master_barang.nama_brg, satuan.nama_satuan, master_barang.merk, detail_master.tipe_barang')
             ->join('detail_master', 'detail_master.detail_master_id = barang.id_master_barang')
@@ -2387,9 +2343,9 @@ class Admin extends BaseController
         // // Tampilkan atau unduh PDF
         // $dompdf->stream('Data_Barang.pdf', array('Attachment' => false));
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
-        $html = view('Admin/Laporan/Lap_barang', $data);
+        $html                  = view('Admin/Laporan/Lap_barang', $data);
 
         $mpdf->setAutoPageBreak(true);
 
@@ -2402,7 +2358,6 @@ class Admin extends BaseController
 
         $mpdf->AddPageByArray(['orientation' => 'L'] + $options);
 
-
         $mpdf->WriteHtml($html);
         $this->response->setHeader('Content-Type', 'application/pdf');
         $mpdf->Output('Lap Data Barang Barang.pdf', 'I');
@@ -2411,18 +2366,18 @@ class Admin extends BaseController
     // tambah user
     public function kelola_user()
     {
-        $userModel = new UserModel();
+        $userModel     = new UserModel();
         $data['users'] = $userModel->findAll();
 
         $groupModel = new GroupModel();
 
         foreach ($data['users'] as $row) {
-            $dataRow['group'] = $groupModel->getGroupsForUser($row->id);
-            $dataRow['row'] = $row;
+            $dataRow['group']       = $groupModel->getGroupsForUser($row->id);
+            $dataRow['row']         = $row;
             $data['row' . $row->id] = view('Admin/User/Row', $dataRow);
         }
         $data['groups'] = $groupModel->findAll();
-        $data['title'] = 'Daftar Pengguna';
+        $data['title']  = 'Daftar Pengguna';
         return view('Admin/User/Index', $data);
     }
 
@@ -2437,8 +2392,8 @@ class Admin extends BaseController
 
     public function changeGroup()
     {
-        $userId = $this->request->getVar('id');
-        $groupId = $this->request->getVar('group');
+        $userId     = $this->request->getVar('id');
+        $groupId    = $this->request->getVar('group');
         $groupModel = new GroupModel();
         $groupModel->removeUserFromAllGroups(intval($userId));
         $groupModel->addUserToGroup(intval($userId), intval($groupId));
@@ -2450,10 +2405,10 @@ class Admin extends BaseController
         $userId = $this->request->getVar('user_id');
 
         $password_baru = $this->request->getVar('password_baru');
-        $userModel = new \App\Models\User();
-        $user = $userModel->getUsers($userId);
+        $userModel     = new \App\Models\User();
+        $user          = $userModel->getUsers($userId);
         // $dataUser->update($userId, ['password_hash' => password_hash($password_baru, PASSWORD_DEFAULT)]);
-        $userEntity = new User($user);
+        $userEntity           = new User($user);
         $userEntity->password = $password_baru;
         $userModel->save($userEntity);
         return redirect()->to(base_url('Admin/kelola_user'));
@@ -2462,7 +2417,7 @@ class Admin extends BaseController
     public function activateUser($id, $active)
     {
         $userModel = new UserModel();
-        $user = $userModel->find($id);
+        $user      = $userModel->find($id);
 
         if ($user) {
             $userModel->update($id, ['active' => $active]);
@@ -2471,8 +2426,6 @@ class Admin extends BaseController
             return redirect()->back()->with('error', 'Pengguna tidak ditemukan.');
         }
     }
-
-
 
     //Laporan Barang
     // /* Generate QR Code */
@@ -2518,7 +2471,7 @@ class Admin extends BaseController
     public function pengecekan($id)
     {
         $data = [
-            'title' => 'Pengecekan',
+            'title'  => 'Pengecekan',
             'barang' => $this->InventarisModel->getInventaris($id),
         ];
         return view('Admin/Pengecekan/Index', $data);
@@ -2527,10 +2480,10 @@ class Admin extends BaseController
     {
         $data = $this->request->getPost();
         $data = [
-            'id_inventaris' => $data['id_inventaris'],
+            'id_inventaris'      => $data['id_inventaris'],
             'tanggal_pengecekan' => date("Y-m-d"),
-            'keterangan' => $data['keterangan'],
-            'lokasi_lama' => $data['lokasi_barang'],
+            'keterangan'         => $data['keterangan'],
+            'lokasi_lama'        => $data['lokasi_barang'],
             // 'lokasi_baru' => $data['lokasi'],
         ];
         // dd($data);
@@ -2560,7 +2513,7 @@ class Admin extends BaseController
             return redirect()->to(base_url('Admin'))->with('error', 'Lokasi harus diisi.');
         }
 
-        $inventarisModel = new InventarisModel();
+        $inventarisModel    = new InventarisModel();
         $data['inventaris'] = $inventarisModel
             ->select('inventaris.*, master_barang.nama_brg,master_barang.kode_brg, detail_master.tipe_barang,satuan.nama_satuan, master_barang.merk')
             ->join('detail_master', 'detail_master.detail_master_id = inventaris.id_master_barang')
@@ -2571,7 +2524,7 @@ class Admin extends BaseController
 
         $data['lokasi'] = $lokasi;
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf                  = new \Mpdf\Mpdf();
         $mpdf->showImageErrors = true;
 
         $html = view('Admin/Laporan/Lap_Ruangan', $data);
@@ -2592,7 +2545,6 @@ class Admin extends BaseController
         $this->response->setHeader('Content-Type', 'application/pdf');
         $mpdf->Output('Lap Inventaris Barang Ruangan.pdf', 'I');
     }
-
 
     public function Scan()
     {
