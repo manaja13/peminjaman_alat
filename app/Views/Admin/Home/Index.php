@@ -17,7 +17,7 @@
                                     Total Permintaan Barang
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?=$semua_permintaan;?>
+                                  
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -42,7 +42,9 @@
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-primary">
                                     <span
-                                        class="text-danger"><?=$stokdibawah10;?></span>
+                                        class="text-danger">
+                                        
+                                    </span>
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -65,7 +67,7 @@
                                     Total Permintaan Di-Proses
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-success">
-                                    <?=$proses_permintaan;?>
+                                 
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -87,7 +89,7 @@
                                     Total Permintaan Barang Selesai
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-success">
-                                    <?=$selesai_permintaan;?>
+                                   
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -110,7 +112,7 @@
                                     Pengadaan Barang Proses
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-success">
-                                    <?=$proses_pengadaan;?>
+                                   
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -134,7 +136,7 @@
                                     Pengadaan Barang Selesai
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-success">
-                                    <?=$selesai_pengadaan;?>
+                                   
                                 </div>
                             </div>
                             <div class="col-auto">
