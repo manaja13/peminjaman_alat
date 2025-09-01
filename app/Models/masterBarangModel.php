@@ -7,7 +7,7 @@ class masterBarangModel extends Model
 {
     protected $table         = 'master_barang';
     protected $primaryKey    = 'kode_brg';
-    protected $allowedFields = ['kode_brg', 'nama_brg', 'jenis_brg', 'merk', 'created_at', 'updated_at'];
+    protected $allowedFields = ['kode_brg', 'nama_brg', 'jenis_brg', 'merk', 'created_at', 'updated_at','spesifikasi', 'id_satuan','is_active'];
 
     public function getMasterInventory($id = false)
     {
@@ -19,16 +19,17 @@ class masterBarangModel extends Model
         }
     }
 
-    public function getMasterBarang($id = false)
-    {
-        $builder = $this->select('master_barang.*, detail_master.tipe_barang')
-            ->join('detail_master', 'detail_master.master_barang = master_barang.kode_brg', 'left')
-            ->orderBy('master_barang.jenis_brg', 'ASC');
+   public function getMasterBarang($id = false)
+{
+    $builder = $this->select('master_barang.*, satuan.nama_satuan')
+        ->join('satuan', 'satuan.satuan_id = master_barang.id_satuan', 'left')
+        ->orderBy('master_barang.jenis_brg', 'ASC');
 
-        if ($id === false) {
-            return $builder->findAll();
-        } else {
-            return $builder->where('master_barang.kode_brg', $id)->first();
-        }
+    if ($id === false) {
+        return $builder->findAll();
+    } else {
+        return $builder->where('master_barang.kode_brg', $id)->first();
     }
+}
+
 }

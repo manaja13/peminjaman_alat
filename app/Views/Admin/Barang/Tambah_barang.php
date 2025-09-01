@@ -30,19 +30,22 @@
                         <div class="row">
                             <div class="col-12">
 
-                                <div class="form-group">
-                                    <label for="nama_barang">Nama Barang</label>
-                                    <select name="nama_barang" id="nama_barang" class="form-control form-control-user <?= ($validation->hasError('nama_barang')) ? 'is-invalid' : ''; ?>">
-                                        <option value="">Pilih Nama Barang</option>
-                                        <?php foreach ($master_barang as $barang) : ?>
-                                            <option value="<?= $barang['detail_master_id']; ?>">
-                                                <?= $barang['nama_brg']; ?>(<?= $barang['tipe_barang']; ?>)</option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <div id="nama_barangFeedback" class="invalid-feedback">
-                                        <?= $validation->getError('nama_barang'); ?>
-                                    </div>
-                                </div>
+                             <div class="form-group">
+    <label for="nama_barang">Nama Barang</label>
+    <select name="nama_barang" id="nama_barang" 
+            class="form-control form-control-user <?= ($validation->hasError('nama_barang')) ? 'is-invalid' : ''; ?>">
+        <option value="">Pilih Nama Barang</option>
+        <?php foreach ($master_barang as $barang) : ?>
+            <option value="<?= $barang['kode_brg']; ?>">
+                <?= $barang['nama_brg']; ?> (<?= ucfirst($barang['jenis_brg']); ?>)
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <div id="nama_barangFeedback" class="invalid-feedback">
+        <?= $validation->getError('nama_barang'); ?>
+    </div>
+</div>
+
 
                                 <div class="form-group">
                                     <label for="satuan_barang">Satuan Barang</label>

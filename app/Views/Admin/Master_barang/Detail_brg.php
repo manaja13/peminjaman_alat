@@ -37,76 +37,55 @@
                         </div>
                     </div>
                     <div class="col-lg-4 mb-3">
-                        <label for="nama_barang">Jenis Barang</label>
-                        <input name="nama_barang" type="text" class="form-control form-control-user"
-                            id="input-nama_barang" value="<?php
-                                                                                                                                    if ($master_brg['jenis_brg'] == 'inv') {
-                                                                                                                                        echo "Inventaris";
-                                                                                                                                    } else {
-                                                                                                                                        echo "ATK";
-                                                                                                                                    }
-?>" readonly />
+                        <label for="jenis_brg">Jenis Barang</label>
+                        <input name="jenis_brg" type="text" class="form-control form-control-user"
+                                id="input-jenis_brg"
+                                value="<?= $master_brg['jenis_brg']; ?>"
+                                readonly />
                     </div>
 
                 </div>
-                <div class="row col-lg-12 mx-2 table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Tipe Barang</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
+              <div class="row col-lg-12 mx-2 table-responsive">
+    <table class="table table-bordered" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Lokasi</th>
+                <th>Kondisi</th>
+                <th>Stok Awal</th>
+                <th>Stok Tersedia</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if ($inventaris) : ?>
+                <?php $jumlah_awal = 0; $jumlah_tersedia = 0; ?>
+                <?php foreach ($inventaris as $num => $inv) : ?>
+                    <?php 
+                        $jumlah_awal     += $inv['stok_awal'];
+                        $jumlah_tersedia += $inv['stok_tersedia'];
+                    ?>
+                    <tr>
+                        <td><?= $num + 1; ?></td>
+                        <td><?= $inv['lokasi']; ?></td>
+                        <td><?= $inv['kondisi']; ?></td>
+                        <td class="text-center"><?= $inv['stok_awal']; ?></td>
+                        <td class="text-center"><?= $inv['stok_tersedia']; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr>
+                    <td colspan="3" style="text-align: center;">Total</td>
+                    <td class="text-center"><?= $jumlah_awal; ?></td>
+                    <td class="text-center"><?= $jumlah_tersedia; ?></td>
+                </tr>
+            <?php else : ?>
+                <tr>
+                    <td colspan="5" style="text-align: center;">Data inventaris tidak ditemukan</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 
-                        <tbody>
-
-                            <?php if ($detail_brg) {
-                                $jumlah = 0;
-                                ?>
-                            <?php foreach ($detail_brg as $num => $data) {
-
-                                if ($data['jenis_brg'] == 'inv') {
-                                    $detail = $inv_model->where('id_master_barang', $data['detail_master_id'])->countAllResults();
-                                    $jumlah = $jumlah + $detail;
-                                } else {
-                                    $detail = $barang_model->select('(SELECT SUM(stok) FROM barang WHERE id_master_barang = ' . $data['detail_master_id'] . ') as stok')->where('id_master_barang', $data['detail_master_id'])->first();
-                                    $jumlah = $jumlah + $detail['stok'];
-                                }
-                                ?>
-                            <tr>
-                                <td><?= $num + 1; ?></td>
-                                <td><?= $data['nama_brg']; ?>-(<?= $data['tipe_barang']; ?>)
-                                </td>
-                                <td class="text-center">
-                                    <?php
-                                            if ($data['jenis_brg'] == 'inv') {
-                                                echo $detail;
-                                            } else {
-                                                echo $detail['stok'];
-                                            }
-                                ?>
-                                </td>
-                            </tr>
-
-
-                            <?php
-                            } ?>
-                            <tr>
-                                <td colspan="2" style="text-align: center;">Total</td>
-                                <td class="text-center">
-                                    <?= $jumlah; ?>
-                                </td>
-                            </tr>
-
-                            <?php } else { ?>
-                            <tr>
-                                <td colspan="3" style="text-align: center;">Data tidak ditemukan</td>
-                            </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                </div>
                 <br>
                 <a href="/Admin/master_barang" class="btn btn-secondary">&laquo; Kembali ke daftar barang
                 </a>

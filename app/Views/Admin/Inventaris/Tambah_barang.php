@@ -30,22 +30,22 @@
                         <?php echo csrf_field();?>
                         <div class="row">
                             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                <div class="form-group ">
-                                    <label for="nama_barang">Nama Barang</label>
-                                    <select name="nama_barang"
-                                        class="form-control form-control-user <?php echo ($validation->hasError('nama_barang')) ? 'is-invalid' : '';?>"
-                                        id="input-nama_barang">
-                                        <option value="">Pilih Nama Barang</option>
-                                        <?php
-                                        foreach ($master_barang as $b): ?>
-                                        <option value="<?php echo $b['detail_master_id'];?>">
-                                            <?php echo $b['nama_brg'];?>(<?php echo $b['tipe_barang'];?>)</option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <div id="nama_barangFeedback" class="invalid-feedback">
-                                        <?php echo $validation->getError('nama_barang');?>
-                                    </div>
-                                </div>
+                              <div class="form-group">
+    <label for="nama_barang">Nama Barang</label>
+    <select name="nama_barang" id="nama_barang" 
+            class="form-control form-control-user <?= ($validation->hasError('nama_barang')) ? 'is-invalid' : ''; ?>">
+        <option value="">Pilih Nama Barang</option>
+        <?php foreach ($master_barang as $barang) : ?>
+            <option value="<?= $barang['kode_brg']; ?>">
+                <?= $barang['nama_brg']; ?> (<?= ucfirst($barang['jenis_brg']); ?>)
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <div id="nama_barangFeedback" class="invalid-feedback">
+        <?= $validation->getError('nama_barang'); ?>
+    </div>
+</div>
+
 
                                 <div class="form-group ">
                                     <label for="id_satuan">satuan Barang</label>

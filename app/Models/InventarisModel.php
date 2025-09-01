@@ -8,7 +8,7 @@ class InventarisModel extends Model
 {
     protected $table = 'inventaris';
     protected $primaryKey = 'kode_barang';
-    protected $allowedFields = ['kode_barang', 'id_master_barang', 'kondisi', 'spesifikasi', 'id_satuan', 'lokasi', 'tgl_perolehan', 'qrcode', 'file', 'created_at', 'updated_at', 'deleted_at'];
+    protected $allowedFields = ['kode_barang', 'id_master_barang', 'kondisi', 'spesifikasi', 'id_satuan', 'lokasi', 'detail', 'qrcode', 'file', 'created_at', 'updated_at', 'deleted_at', 'stok_awal', 'stok_tersedia'];
     protected $db;
 
     // public function __construct()
