@@ -41,15 +41,7 @@ class BarangModel extends Model
             ->findAll();
     }
 
-    // public function softDeleteWithRelations($kode_barang)
-    // {
-    //     // Hapus soft delete di tabel Barang
-    //     $this->delete($kode_barang);
-
-    //     // Hapus record di tabel TransaksiBarang terkait
-    //     $transaksiModel = new TransaksiBarangModel();
-    //     $transaksiModel->where('kode_barang', $kode_barang)->delete();
-    // }
+    
     public function softDeleteWithRelations($kode_barang)
     {
         // Hapus soft delete di tabel Barang

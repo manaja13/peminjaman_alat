@@ -1,6 +1,6 @@
-<?= $this->extend('Admin/Templates/Index') ?>
+<?php echo $this->extend('Admin/Templates/Index') ?>
 
-<?= $this->section('page-content'); ?>
+<?php echo $this->section('page-content'); ?>
 
 <div class="container-fluid">
 
@@ -15,7 +15,7 @@
                         <label for="nama_barang">Kode Barang</label>
                         <input name="nama_barang" type="text" class="form-control form-control-user"
                             id="input-nama_barang"
-                            value="<?= $master_brg['kode_brg']; ?>"
+                            value="<?php echo $master_brg['kode_brg']; ?>"
                             readonly />
                     </div>
                     <div class="col-lg-4">
@@ -23,7 +23,7 @@
                             <label for="nama_barang">Nama Barang</label>
                             <input name="nama_barang" type="text" class="form-control form-control-user"
                                 id="input-nama_barang"
-                                value="<?= $master_brg['nama_brg']; ?>"
+                                value="<?php echo $master_brg['nama_brg']; ?>"
                                 readonly />
                         </div>
                     </div>
@@ -32,16 +32,21 @@
                             <label for="nama_barang">Merk Barang</label>
                             <input name="nama_barang" type="text" class="form-control form-control-user"
                                 id="input-nama_barang"
-                                value="<?= $master_brg['merk']; ?>"
+                                value="<?php echo $master_brg['merk']; ?>"
                                 readonly />
                         </div>
                     </div>
                     <div class="col-lg-4 mb-3">
                         <label for="jenis_brg">Jenis Barang</label>
-                        <input name="jenis_brg" type="text" class="form-control form-control-user"
-                                id="input-jenis_brg"
-                                value="<?= $master_brg['jenis_brg']; ?>"
-                                readonly />
+                      <input name="jenis_brg" type="text" class="form-control form-control-user"
+       id="input-jenis_brg"
+       value="<?php
+                  echo($master_brg['jenis_brg'] == 'sfw') ? 'Software' :
+                  (($master_brg['jenis_brg'] == 'hrd') ? 'Hardware' :
+                  (($master_brg['jenis_brg'] == 'tools') ? 'Tools' : '-'));
+              ?>"
+       readonly />
+
                     </div>
 
                 </div>
@@ -52,34 +57,30 @@
                 <th>No</th>
                 <th>Lokasi</th>
                 <th>Kondisi</th>
-                <th>Stok Awal</th>
-                <th>Stok Tersedia</th>
+             
             </tr>
         </thead>
         <tbody>
-            <?php if ($inventaris) : ?>
-                <?php $jumlah_awal = 0; $jumlah_tersedia = 0; ?>
-                <?php foreach ($inventaris as $num => $inv) : ?>
-                    <?php 
-                        $jumlah_awal     += $inv['stok_awal'];
-                        $jumlah_tersedia += $inv['stok_tersedia'];
-                    ?>
+            <?php if ($inventaris): ?>
+<?php $jumlah_awal = 0;
+$jumlah_tersedia   = 0; ?>
+<?php foreach ($inventaris as $num => $inv): ?>
+
                     <tr>
-                        <td><?= $num + 1; ?></td>
-                        <td><?= $inv['lokasi']; ?></td>
-                        <td><?= $inv['kondisi']; ?></td>
-                        <td class="text-center"><?= $inv['stok_awal']; ?></td>
-                        <td class="text-center"><?= $inv['stok_tersedia']; ?></td>
+                        <td><?php echo $num + 1; ?></td>
+                        <td><?php echo $inv['lokasi']; ?></td>
+                        <td><?php echo $inv['kondisi']; ?></td>
+                
                     </tr>
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="3" style="text-align: center;">Total</td>
-                    <td class="text-center"><?= $jumlah_awal; ?></td>
-                    <td class="text-center"><?= $jumlah_tersedia; ?></td>
+                    <td class="text-center"><?php echo $jumlah_awal; ?></td>
+                    <td class="text-center"><?php echo $jumlah_tersedia; ?></td>
                 </tr>
-            <?php else : ?>
+            <?php else: ?>
                 <tr>
-                    <td colspan="5" style="text-align: center;">Data inventaris tidak ditemukan</td>
+                    <td colspan="5" style="text-align: center;">Data tidak ditemukan</td>
                 </tr>
             <?php endif; ?>
         </tbody>
@@ -93,4 +94,4 @@
         </div>
     </div>
 </div>
-<?= $this->endSection('page-content'); ?>
+<?php echo $this->endSection('page-content'); ?>

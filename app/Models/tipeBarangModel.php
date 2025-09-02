@@ -1,14 +1,13 @@
 <?php
-
 namespace App\Models;
 
 use CodeIgniter\Model;
 
 class tipeBarangModel extends Model
 {
-    protected $table = 'detail_master';
-    protected $primaryKey = 'detail_master_id';
-    protected $allowedFields = ['tipe_barang', 'master_barang'];
+    protected $table            = 'detail_master';
+    protected $primaryKey       = 'detail_master_id';
+    protected $allowedFields    = ['tipe_barang', 'master_barang'];
     protected $useAutoIncrement = true;
 
     public function getTipeBarang($id_tipe_barang = false)
@@ -24,20 +23,24 @@ class tipeBarangModel extends Model
             ->first();
     }
 
-    public function getMasterInventory($id = false)
+    // Di model masterBarangModel.php
+    public function getMasterInventory($kode_brg = false)
     {
-        if ($id == false) {
-            return $this
-                ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
-                // ->where(['master_barang.jenis_brg' => 'inv'])
-                ->findAll();
+        if ($kode_brg === false) {
+            return $this->findAll();
         }
-        return $this
-            ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
-            // ->where(['master_barang.jenis_brg' => 'inv'])
-            ->where(['detail_master_id' => $id])
-            ->first();
+        return $this->where('kode_brg', $kode_brg)->first();
     }
+
+// Ambil tipe barang tertentu (misal: inv, atk)
+    public function getByJenis($jenis_brg = false)
+    {
+        if ($jenis_brg === false) {
+            return $this->findAll();
+        }
+        return $this->where('jenis_brg', $jenis_brg)->findAll();
+    }
+
     public function getMasterAtk($id = false)
     {
         if ($id == false) {
@@ -53,7 +56,8 @@ class tipeBarangModel extends Model
             ->first();
     }
 
-    public function getMaster($master_barang){
+    public function getMaster($master_barang)
+    {
         return $this
             ->where(['master_barang' => $master_barang])
             ->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang')
