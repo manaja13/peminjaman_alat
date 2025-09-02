@@ -40,6 +40,7 @@
                             </thead>
                             <tbody>
                                 <?php $no = 1; foreach ($rekap as $row): ?>
+                                <?php $key = md5($row['lokasi'].'|'.$row['nama_brg']); ?>
                                 <tr class="group-row">
                                     <td><?= $no++; ?></td>
                                     <td><?= esc($row['lokasi']); ?></td>
@@ -49,16 +50,11 @@
                                     <td style="text-align:center;"><?= esc($row['stok']); ?></td>
                                     <td style="text-align:center;">
                                         <button class="btn btn-info btn-sm toggle-detail"
-                                            data-lokasi="<?= esc($row['lokasi']) ?>"
-                                            data-nama="<?= esc($row['nama_brg']) ?>">
-                                            Expand
-                                        </button>
+                                            data-key="<?= $key ?>">Expand</button>
                                     </td>
                                 </tr>
                                 <!-- Expandable: detail SN/unit (initially hidden) -->
-                                <tr class="detail-row" style="display:none;"
-                                    data-lokasi="<?= esc($row['lokasi']) ?>"
-                                    data-nama="<?= esc($row['nama_brg']) ?>">
+                                <tr class="detail-row" style="display:none;" data-key="<?= $key ?>">
                                     <td colspan="7">
                                         <div class="p-2 bg-light rounded shadow-sm">
                                             <b>Unit di <?= esc($row['lokasi']) ?> (<?= esc($row['nama_brg']) ?>):</b>
@@ -113,10 +109,8 @@
 <script>
 $(document).ready(function(){
     $('.toggle-detail').on('click', function(){
-        var lokasi = $(this).data('lokasi');
-        var nama   = $(this).data('nama');
-        // Toggle only the matching detail row
-        $('tr.detail-row[data-lokasi="'+lokasi+'"][data-nama="'+nama+'"]').toggle();
+        var key = $(this).data('key');
+        $('tr.detail-row[data-key="'+key+'"]').toggle();
     });
 });
 </script>
