@@ -10,7 +10,7 @@
     .sidebar .sidebar-brand {
         background: #14ffec11;
         border-bottom: 1px solid #14ffec33;
-        padding: 20px 0;
+        padding: 10px 0;
     }
     .sidebar .sidebar-brand-text {
         color: #14ffec;
