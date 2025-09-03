@@ -116,20 +116,15 @@ class Admin extends BaseController
 
     public function profil()
     {
-        $data['title']            = 'User Profile ';
-        $userlogin                = user()->username;
-        $userid                   = user()->id;
-        $role                     = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
-        $role == '1' ? $role_echo = 'Admin' : $role_echo = 'Pegawai'; // $data['title'] = 'User Profile ';
-        $userlogin                = user()->username;
-        $userid                   = user()->id;
+        $data['title'] = 'User Profile ';
+        $userlogin     = user()->username;
+        $userid        = user()->id;
 
         // Mengambil data role dari tabel auth_groups_users
         $roleData = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
 
         // Memeriksa apakah data role ditemukan
         if ($roleData) {
-
             $adminRoleId      = 1;
             $petugasPengadaan = 2;
 
@@ -146,19 +141,15 @@ class Admin extends BaseController
             $role_echo = 'Pegawai';
         }
 
-        $data    = $this->db->table('permintaan_barang');
-        $query1  = $data->where('id_user', $userid)->get()->getResult();
         $builder = $this->db->table('users');
         $builder->select('id,username,email,created_at,foto');
         $builder->where('username', $userlogin);
         $query = $builder->get();
-        $semua = count($query1);
-        $data  = [
-            'semua' => $semua,
+
+        $data = [
             'user'  => $query->getRow(),
             'title' => 'Profil - BPS',
             'role'  => $role_echo,
-
         ];
 
         return view('Admin/Home/Profil', $data);

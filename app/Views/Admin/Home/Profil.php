@@ -63,9 +63,6 @@
                                 <?php $date = date_create($user->created_at);
 echo (date_format($date, "d F Y H:i:s")) ?>
                             </li>
-                            <li class="list-group-item"><i class="fa fa-chart-bar mr-1"></i> Jumlah pengaduan :
-                                <?= $semua ?>
-                            </li>
                         </ul>
                         <div class="row">
                             <div class="col-lg-6 col-md-6 col-sm-12">
