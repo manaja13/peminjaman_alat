@@ -8,12 +8,14 @@ use App\Models\detailPengadaanModel;
 use App\Models\detailPermintaanModel;
 use App\Models\InventarisModel;
 use App\Models\masterBarangModel;
+use App\Models\PeminjamanDetailModel;
+use App\Models\PeminjamanHeaderModel;
 use App\Models\PengadaanModel;
 use App\Models\pengecekanModel;
 use App\Models\PermintaanModel;
 use App\Models\Profil;
+use App\Models\RuanganModel;
 use App\Models\satuanModel;
-use App\Models\tipeBarangModel;
 use App\Models\TransaksiBarangModel;
 use Endroid\QrCode\Logo\Logo;
 use Endroid\QrCode\QrCode;
@@ -36,7 +38,6 @@ class Admin extends BaseController
     protected $BarangModel;
     protected $validation;
     protected $session;
-    protected $tipeBarangModel;
     protected $masterBarangModel;
     protected $InventarisModel;
     protected $PermintaanModel;
@@ -48,6 +49,9 @@ class Admin extends BaseController
     protected $pengecekanModel;
     protected $satuanModel;
     protected $TransaksiBarangModel;
+    protected $PeminjamanHeaderModel;
+    protected $PeminjamanDetailModel;
+    protected $RuanganModel;
     public function __construct()
     {
         $this->InventarisModel       = new InventarisModel();
@@ -57,11 +61,13 @@ class Admin extends BaseController
         $this->detailPermintaanModel = new detailPermintaanModel();
         $this->BalasanModel          = new BalasanModel();
         $this->Profil                = new Profil();
-        $this->tipeBarangModel       = new tipeBarangModel();
         $this->pengecekanModel       = new pengecekanModel();
         $this->BarangModel           = new BarangModel();
         $this->satuanModel           = new satuanModel();
         $this->TransaksiBarangModel  = new TransaksiBarangModel();
+        $this->PeminjamanHeaderModel = new PeminjamanHeaderModel();
+        $this->PeminjamanDetailModel = new PeminjamanDetailModel();
+        $this->RuanganModel          = new RuanganModel();
         $this->db                    = \Config\Database::connect();
         $this->builder               = $this->db->table('users');
         $this->validation            = \Config\Services::validation();
@@ -116,15 +122,20 @@ class Admin extends BaseController
 
     public function profil()
     {
-        $data['title'] = 'User Profile ';
-        $userlogin     = user()->username;
-        $userid        = user()->id;
+        $data['title']            = 'User Profile ';
+        $userlogin                = user()->username;
+        $userid                   = user()->id;
+        $role                     = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
+        $role == '1' ? $role_echo = 'Admin' : $role_echo = 'Pegawai'; // $data['title'] = 'User Profile ';
+        $userlogin                = user()->username;
+        $userid                   = user()->id;
 
         // Mengambil data role dari tabel auth_groups_users
         $roleData = $this->db->table('auth_groups_users')->where('user_id', $userid)->get()->getRow();
 
         // Memeriksa apakah data role ditemukan
         if ($roleData) {
+
             $adminRoleId      = 1;
             $petugasPengadaan = 2;
 
@@ -141,15 +152,19 @@ class Admin extends BaseController
             $role_echo = 'Pegawai';
         }
 
+        $data    = $this->db->table('permintaan_barang');
+        $query1  = $data->where('id_user', $userid)->get()->getResult();
         $builder = $this->db->table('users');
         $builder->select('id,username,email,created_at,foto');
         $builder->where('username', $userlogin);
         $query = $builder->get();
-
-        $data = [
+        $semua = count($query1);
+        $data  = [
+            'semua' => $semua,
             'user'  => $query->getRow(),
             'title' => 'Profil - BPS',
             'role'  => $role_echo,
+
         ];
 
         return view('Admin/Home/Profil', $data);
@@ -493,31 +508,6 @@ class Admin extends BaseController
         return view('Admin/Inventaris/Index', $data);
     }
 
-    public function adm_inventaris1()
-    {
-        // Rekap: jumlah barang per ruangan + per nama barang + merk
-        $rekap = $this->InventarisModel
-            ->select('inventaris.lokasi, master_barang.nama_brg, master_barang.merk, COUNT(inventaris.kode_barang) as total_unit')
-            ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang')
-            ->where('master_barang.is_active', 1)
-            ->groupBy('inventaris.lokasi, master_barang.nama_brg, master_barang.merk')
-            ->orderBy('inventaris.lokasi, master_barang.nama_brg')
-            ->findAll();
-
-        // Daftar detail inventaris per ruangan (opsional: include merk, jenis)
-        $inventaris = $this->InventarisModel
-            ->select('inventaris.*, master_barang.nama_brg, master_barang.merk, master_barang.jenis_brg')
-            ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang')
-            ->where('master_barang.is_active', 1)
-            ->orderBy('inventaris.lokasi, master_barang.nama_brg')
-            ->findAll();
-
-        $data['rekap']      = $rekap;
-        $data['inventaris'] = $inventaris;
-        $data['title']      = 'Rekap Inventaris Per Ruangan + Barang';
-        return view('Admin/Inventaris/Index', $data);
-    }
-
     public function tambah_inv()
     {
         $data = [
@@ -704,7 +694,8 @@ class Admin extends BaseController
             'validation'    => \Config\Services::validation(),
             'inventaris'    => $this->InventarisModel->getInventaris($id),
             'satuan'        => $this->satuanModel->findAll(),
-            'master_barang' => $this->tipeBarangModel->getMasterInventory(),
+
+            'master_barang' => $this->masterBarangModel->getMasterInventory(),
         ];
         // dd($data);
         return view('Admin/Inventaris/Edit_barang', $data);
@@ -842,14 +833,14 @@ class Admin extends BaseController
 
     public function detail_inv($id)
     {
-        $data['title'] = 'Detail Barang Ienventaris';    // Pindahkan ini ke atas agar tidak terjadi override
-        $this->builder = $this->db->table('inventaris'); // Gunakan $this->builder untuk mengakses builder
+        $data['title'] = 'Detail Barang Inventaris'; // Judul benerin
 
-        $this->builder->select('inventaris.*, master_barang.nama_brg, satuan.nama_satuan, master_barang.merk, detail_master.tipe_barang');
-        $this->builder->join('detail_master', 'detail_master.detail_master_id = inventaris.id_master_barang');
-        $this->builder->join('master_barang', 'master_barang.kode_brg = detail_master.master_barang');
+        $this->builder = $this->db->table('inventaris');
+        $this->builder->select('inventaris.*, master_barang.nama_brg, satuan.nama_satuan, master_barang.merk');
+        $this->builder->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang'); // INI YANG BENER!
         $this->builder->join('satuan', 'satuan.satuan_id = inventaris.id_satuan');
         $this->builder->where('inventaris.kode_barang', $id);
+
         $query              = $this->builder->get();
         $data['inventaris'] = $query->getRow();
 
@@ -857,8 +848,10 @@ class Admin extends BaseController
             return redirect()->to('/admin/adm_inventaris');
         }
 
+        // dd($data); // Buat debug doang, matiin kalau udah jalan
         return view('Admin/Inventaris/Detail_inv', $data);
     }
+
     protected function delete_qrcode($unique_barcode)
     {
         $qrcode_path = 'assets/media/qrcode/' . $unique_barcode . '.png';
@@ -905,7 +898,6 @@ class Admin extends BaseController
                 ->where('deleted_at', null)->findAll(),
         ];
 
-        // dd($data);
         return view('Admin/Barang/Index', $data);
     }
 
@@ -2410,46 +2402,6 @@ class Admin extends BaseController
         }
     }
 
-    //Laporan Barang
-    // /* Generate QR Code */
-    // $data = $this->request->getPost();
-
-    // // Generate QR Code
-    // $qr_data = [
-    //     'kode_barang'    => $data['kode_barang'],
-    //     'nama_barang'    => $data['nama_barang'],
-    //     'kondisi'        => $data['kondisi'],
-    //     'merk'            => $data['merk'],
-    //     'tipe'            => $data['tipe'],
-    //     'satuan_barang'  => $data['satuan_barang'],
-    //     'jumlah_barang'  => $data['jumlah_barang'],
-    //     'tgl_perolehan'  => $data['tgl_perolehan'],
-    // ];
-
-    // $qrcode_result = $this->generate_qrcode($qr_data);
-
-    // // Combine QR Code with other form data
-    // $data['qrcode'] = $qrcode_result['unique_barcode']; // Ganti dengan 'unique_barcode'
-
-    // // Add 'file' to $data
-    // $data['file'] = $qrcode_result['file'];
-
-    // // Add Data
-    // if ($this->InventarisModel->insert_data($data)) {
-    //     $this->modal_feedback(
-    //         'success',
-    //         'Success',
-    //         'Add Data Success',
-    //         'OK'
-    //     );
-    // } else {
-    //     $this->modal_feedback('error', 'Error', 'Add Data Failed', 'Try again');
-    // }
-
-    // // Retrieve and return updated data to the view
-    // $data['inventaris'] = $this->InventarisModel->fetch_datas();
-    // $data['title'] = 'inventaris';
-
     // pengecekan
     public function pengecekan($id)
     {
@@ -2536,4 +2488,195 @@ class Admin extends BaseController
         ];
         return view('Admin/Scan/index', $data);
     }
+
+    public function transaksiBarang()
+    {
+        $transaksi = $this->TransaksiBarangModel
+            ->select('
+        transaksi_barang.*,
+        inventaris.kode_barang,
+        inventaris.kondisi,
+        inventaris.lokasi,
+        inventaris.spesifikasi AS spek_real,
+        master_barang.nama_brg,
+        master_barang.merk,
+        master_barang.spesifikasi AS spek_master,
+        master_barang.jenis_brg,
+        satuan.nama_satuan,
+        users.username AS user_name
+    ')
+            ->join('inventaris', 'inventaris.kode_barang = transaksi_barang.kode_barang', 'left')
+            ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang', 'left')
+            ->join('satuan', 'satuan.satuan_id = inventaris.id_satuan', 'left')
+            ->join('users', 'users.id = transaksi_barang.user_id', 'left')
+            ->orderBy('transaksi_barang.tanggal_transaksi', 'desc')
+            ->findAll();
+
+        $data = [
+            'title'      => 'Histori Transaksi Barang',
+            'transaksis' => $transaksi,
+        ];
+
+        // dd($data);
+        return view('Admin/TransaksiBarang/Index', $data);
+    }
+
+    public function peminjaman()
+    {
+        $status = $this->request->getGet('status') ?? 'all'; // ambil dari query param
+
+        $builder = $this->PeminjamanHeaderModel
+            ->select('peminjaman_header.*, users.username as peminjam')
+            ->join('users', 'users.id = peminjaman_header.id_user', 'left')
+            ->orderBy('peminjaman_header.tanggal_permintaan', 'desc');
+
+        if ($status && $status != 'all') {
+            $builder->where('peminjaman_header.status', $status);
+        }
+
+        $peminjamans = $builder->findAll();
+        $data        = [
+            'title'       => 'Peminjaman Alat',
+            'peminjamans' => $peminjamans,
+            'status'      => $status,
+        ];
+        return view('Admin/Peminjaman/Index', $data);
+
+    }
+
+    public function tambahPeminjaman()
+    {
+        helper(['form']);
+
+        $users   = $this->Profil->findAll();
+        $barangs = $this->InventarisModel
+            ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang', 'left')
+        // ambil barang yang *belum* dipinjam (berdasar status/field FK atau kondisi lain)
+            ->where('inventaris.status', 'tersedia')
+            ->findAll();
+
+        // Ambil semua ruangan
+        $ruangan = $this->RuanganModel->findAll();
+
+        if ($this->request->getMethod() === 'post') {
+            $data = $this->request->getPost();
+
+            // Validasi basic
+            if (! $data['id_user'] || ! $data['tanggal_pinjam'] || ! $data['ruangan_id_pinjam'] || empty($data['barang'])) {
+                return redirect()->back()->withInput()->with('error', 'Data wajib diisi lengkap!');
+            }
+
+            // Insert ke header pakai FK ruangan
+            $header = [
+                'kode_transaksi'    => $data['kode_transaksi'],
+                'id_user'           => $data['id_user'],
+                'tanggal_pinjam'    => $data['tanggal_pinjam'],
+                'ruangan_id_pinjam' => $data['ruangan_id_pinjam'], // FK!
+                'status'            => 'diproses',
+                'catatan'           => $data['catatan'],
+            ];
+            $this->PeminjamanHeaderModel->insert($header);
+            $headerId = $this->PeminjamanHeaderModel->getInsertID();
+
+            foreach ($data['barang'] as $kode_barang) {
+                $this->PeminjamanDetailModel->insert([
+                    'peminjaman_id'   => $headerId,
+                    'inventaris_id'   => $kode_barang,
+                    'jumlah'          => 1,
+                    'kondisi_kembali' => 'baik',
+                    'ruangan_id'      => $data['ruangan_id_pinjam'], // FK ke detail juga (bisa diubah jika perlu)
+                ]);
+                // Update FK ruangan_id di inventaris (bukan string “lokasi”)
+                $this->InventarisModel
+                    ->set('ruangan_id', $data['ruangan_id_pinjam'])
+                    ->where('kode_barang', $kode_barang)
+                    ->update();
+
+                // Optional: Update status jadi "Dipinjam" atau "Tidak Tersedia"
+                $this->InventarisModel
+                    ->set('status', 'dipinjam')
+                    ->where('kode_barang', $kode_barang)
+                    ->update();
+            }
+
+            return redirect()->to('/admin/peminjaman')->with('msg', 'Peminjaman berhasil ditambahkan!');
+        }
+
+        $data = [
+            'title'   => 'Tambah Peminjaman Alat',
+            'users'   => $users,
+            'barangs' => $barangs,
+            'ruangan' => $ruangan,
+        ];
+        // dd($data);
+        return view('Admin/Peminjaman/Tambah', $data);
+
+    }
+    public function savePeminjaman()
+    {
+        $db = db_connect();
+
+                                                              // Ambil input
+        $barangArr       = $this->request->getPost('barang'); // array kode_barang
+        $catatan         = $this->request->getPost('catatan');
+        $ruanganTujuanId = $this->request->getPost('ruangan_id'); // ruangan tujuan pinjam
+
+        if (empty($barangArr) || ! is_array($barangArr)) {
+            return redirect()->back()->with('error', 'Barang belum dipilih');
+        }
+
+        // Mulai transaksi
+        $db->transStart();
+
+        // 1️⃣ Insert Header
+        $headerData = [
+            'kode_transaksi'          => 'PINJAM-' . date('YmdHis'),
+            'tanggal_permintaan'      => date('Y-m-d H:i:s'),
+            'tanggal_pinjam'          => null, // akan diisi saat approve
+            'tanggal_kembali_rencana' => null, // optional
+            'tanggal_kembali_real'    => null, // optional
+            'id_user'                 => user()->id,
+            'approved_by'             => null,
+            'ruangan_id_pinjam'       => $ruanganTujuanId,
+            'ruangan_id_sebelum'      => null, // optional, bisa ambil inventaris
+            'status'                  => 'pending',
+            'catatan'                 => $catatan,
+        ];
+
+        $db->table('peminjaman_header')->insert($headerData);
+        $peminjaman_id = $db->insertID();
+
+        // 2️⃣ Insert Detail Barang
+        foreach ($barangArr as $kode_barang) {
+            $inventaris = $db->table('inventaris')
+                ->where('kode_barang', $kode_barang)
+                ->get()
+                ->getRowArray();
+
+            if ($inventaris) {
+                $db->table('peminjaman_detail')->insert([
+                    'id_user'         => user()->id,
+                    'peminjaman_id'   => $peminjaman_id,
+                    'inventaris_id'   => $kode_barang,
+                    'ruangan_id'      => $inventaris['ruangan_id'],
+                    'status'          => 'dipinjam', // enum
+                    'jumlah'          => 1,
+                    'jumlah_kembali'  => 0,
+                    'kondisi_kembali' => '',   // kosong awal
+                    'detail'          => null, // optional
+                ]);
+            }
+        }
+
+        // Commit transaksi
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal menyimpan peminjaman');
+        }
+
+        return redirect()->to('/admin/peminjaman')
+            ->with('success', 'Peminjaman berhasil disimpan!');
+    }
+
 }

@@ -22,7 +22,6 @@
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h3>Daftar nama Barang </h3>
                     <a href="/Admin/addBarang" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Barang</a>
 
                 </div>
@@ -59,14 +58,7 @@
                                    class="btn btn-sm btn-warning" title="Edit">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <!-- kalau butuh delete tinggal buka ini
-                                <a href="#" class="btn btn-sm btn-danger btn-delete" data-toggle="modal"
-                                   data-target="#modalKonfirmasiDelete"
-                                   data-delete-url="<?php echo site_url('/Admin/delete/' . $data['kode_brg']) ?>"
-                                   title="Hapus">
-                                    <i class="fa fa-trash"></i>
-                                </a>
-                                -->
+                              
                             </td>
                         </tr>
                     <?php }?>

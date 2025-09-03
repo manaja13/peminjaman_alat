@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.2
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Aug 28, 2025 at 02:13 PM
--- Server version: 8.4.3
--- PHP Version: 8.1.30
+-- Generation Time: Sep 03, 2025 at 03:12 PM
+-- Server version: 8.0.30
+-- PHP Version: 8.1.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -53,9 +53,7 @@ CREATE TABLE `auth_groups` (
 
 INSERT INTO `auth_groups` (`id`, `name`, `description`) VALUES
 (1, 'admin', 'site administrator'),
-(2, 'petugas_pengadaan', 'site super admin'),
-(3, 'user', 'regular user'),
-(4, 'administrator', 'superadmin');
+(2, 'user', 'regular user');
 
 -- --------------------------------------------------------
 
@@ -78,11 +76,7 @@ INSERT INTO `auth_groups_permissions` (`group_id`, `permission_id`) VALUES
 (1, 2),
 (1, 2),
 (2, 1),
-(2, 2),
-(3, 2),
-(3, 2),
-(4, 1),
-(4, 2);
+(2, 2);
 
 -- --------------------------------------------------------
 
@@ -103,6 +97,7 @@ INSERT INTO `auth_groups_users` (`group_id`, `user_id`) VALUES
 (1, 1),
 (1, 1),
 (1, 20),
+(1, 22),
 (2, 14),
 (3, 15),
 (3, 17),
@@ -713,7 +708,11 @@ INSERT INTO `auth_logins` (`id`, `ip_address`, `email`, `user_id`, `date`, `succ
 (580, '::1', 'admin@gmail.com', 1, '2024-03-22 01:12:21', 1),
 (581, '::1', 'gg@gmail.com', 20, '2025-08-28 19:48:28', 1),
 (582, '::1', 'use@gmail.com', 21, '2025-08-28 19:51:20', 1),
-(583, '::1', 'gg@gmail.com', 20, '2025-08-28 19:53:15', 1);
+(583, '::1', 'gg@gmail.com', 20, '2025-08-28 19:53:15', 1),
+(584, '::1', 'Ganda@gmail.com', 22, '2025-08-30 18:50:11', 1),
+(585, '::1', 'Ganda@gmail.com', 22, '2025-09-01 18:52:45', 1),
+(586, '::1', 'Ganda@gmail.com', 22, '2025-09-02 17:27:45', 1),
+(587, '::1', 'Ganda@gmail.com', 22, '2025-09-03 19:45:43', 1);
 
 -- --------------------------------------------------------
 
@@ -778,132 +777,22 @@ CREATE TABLE `auth_users_permissions` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `balasan_pengadaan`
---
-
-CREATE TABLE `balasan_pengadaan` (
-  `id` int NOT NULL,
-  `id_pengadaan` int NOT NULL,
-  `kategori` varchar(50) NOT NULL,
-  `balasan_pengadaan` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `balasan_permintaan`
---
-
-CREATE TABLE `balasan_permintaan` (
-  `id` int NOT NULL,
-  `id_permintaan_barang` int NOT NULL,
-  `kategori` varchar(30) NOT NULL,
-  `balasan_permintaan` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `barang`
---
-
-CREATE TABLE `barang` (
-  `kode_barang` int NOT NULL,
-  `id_master_barang` int DEFAULT NULL,
-  `id_satuan` int NOT NULL,
-  `tanggal_barang_masuk` date DEFAULT NULL,
-  `tanggal_barang_keluar` date DEFAULT NULL,
-  `stok` int DEFAULT NULL,
-  `jenis_transaksi` text NOT NULL,
-  `jumlah_pengurangan_stok` int DEFAULT NULL,
-  `jumlah_penambahan_stok` int NOT NULL,
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `detail_master`
---
-
-CREATE TABLE `detail_master` (
-  `detail_master_id` int NOT NULL,
-  `master_barang` varchar(255) NOT NULL,
-  `tipe_barang` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `detail_master`
---
-
-INSERT INTO `detail_master` (`detail_master_id`, `master_barang`, `tipe_barang`) VALUES
-(1, 'PRI-20250828-507', 'hrd');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `detail_pengadaan_barang`
---
-
-CREATE TABLE `detail_pengadaan_barang` (
-  `id` int NOT NULL,
-  `id_pengadaan_barang` varchar(255) NOT NULL,
-  `id_balasan_pengadaan` int NOT NULL,
-  `nama_pengaju` varchar(50) NOT NULL,
-  `nama_barang` varchar(50) NOT NULL,
-  `spesifikasi` text NOT NULL,
-  `jumlah` int NOT NULL,
-  `alasan_pengadaan` text NOT NULL,
-  `jumlah_disetujui` int NOT NULL,
-  `catatan` text NOT NULL,
-  `tgl_pengajuan` datetime NOT NULL,
-  `tgl_proses` datetime NOT NULL,
-  `tgl_selesai` datetime NOT NULL,
-  `status` varchar(50) NOT NULL,
-  `status_akhir` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `detail_permintaan_barang`
---
-
-CREATE TABLE `detail_permintaan_barang` (
-  `id` int NOT NULL,
-  `id_balasan_permintaan` int NOT NULL,
-  `id_user` int NOT NULL,
-  `id_permintaan_barang` varchar(255) NOT NULL,
-  `nama_pengaju` varchar(30) NOT NULL,
-  `jumlah` int NOT NULL,
-  `perihal` text NOT NULL,
-  `detail` text NOT NULL,
-  `tanggal_pengajuan` datetime NOT NULL,
-  `tanggal_diproses` datetime NOT NULL,
-  `tanggal_selesai` datetime NOT NULL,
-  `status` char(15) NOT NULL,
-  `status_akhir` text NOT NULL,
-  `kode_barang` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `inventaris`
 --
 
 CREATE TABLE `inventaris` (
   `kode_barang` varchar(255) NOT NULL,
-  `id_master_barang` int NOT NULL,
+  `id_master_barang` varchar(255) NOT NULL,
   `kondisi` varchar(100) NOT NULL,
   `spesifikasi` varchar(110) NOT NULL,
   `id_satuan` int NOT NULL,
-  `lokasi` varchar(255) NOT NULL,
+  `ruangan_id` int DEFAULT NULL,
+  `status` enum('tersedia','dipinjam','rusak','hilang') DEFAULT 'tersedia',
   `qrcode` text NOT NULL,
   `file` text NOT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
-  `deleted_at` datetime NOT NULL,
+  `deleted_at` datetime DEFAULT NULL,
   `detail` varchar(110) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -911,8 +800,14 @@ CREATE TABLE `inventaris` (
 -- Dumping data for table `inventaris`
 --
 
-INSERT INTO `inventaris` (`kode_barang`, `id_master_barang`, `kondisi`, `spesifikasi`, `id_satuan`, `lokasi`, `qrcode`, `file`, `created_at`, `updated_at`, `deleted_at`, `detail`) VALUES
-('KD-20250828085356824', 1, 'baru', ',', 3, 'Lab', '', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00', '0000-00-00 00:00:00', '');
+INSERT INTO `inventaris` (`kode_barang`, `id_master_barang`, `kondisi`, `spesifikasi`, `id_satuan`, `ruangan_id`, `status`, `qrcode`, `file`, `created_at`, `updated_at`, `deleted_at`, `detail`) VALUES
+('MON-003-20250902-001', 'MON-003', 'baru', 'coba 2 barang di lab dan 3 barang bekas di gudang', 4, 1, 'tersedia', 'mon-003-20250902-001-monitor-lg-19-led_1756814762', 'assets/media/qrcode/mon-003-20250902-001-monitor-lg-19-led_1756814762.png', '2025-09-02 19:06:02', '2025-09-02 19:06:02', NULL, ''),
+('MON-003-20250902-002', 'MON-003', 'baru', 'coba 2 barang di lab dan 3 barang bekas di gudang', 4, 1, 'tersedia', 'mon-003-20250902-002-monitor-lg-19-led_1756814762', 'assets/media/qrcode/mon-003-20250902-002-monitor-lg-19-led_1756814762.png', '2025-09-02 19:06:02', '2025-09-02 19:06:02', NULL, ''),
+('MON-003-20250902-003', 'MON-003', 'bekas', 'coba 2 barang di lab dan 3 barang bekas di gudang', 4, 2, 'tersedia', 'mon-003-20250902-003-monitor-lg-19-led_1756814762', 'assets/media/qrcode/mon-003-20250902-003-monitor-lg-19-led_1756814762.png', '2025-09-02 19:06:02', '2025-09-02 19:06:02', NULL, ''),
+('MON-003-20250902-004', 'MON-003', 'bekas', 'coba 2 barang di lab dan 3 barang bekas di gudang', 4, 2, 'tersedia', 'mon-003-20250902-004-monitor-lg-19-led_1756814762', 'assets/media/qrcode/mon-003-20250902-004-monitor-lg-19-led_1756814762.png', '2025-09-02 19:06:02', '2025-09-02 19:06:02', NULL, ''),
+('MON-003-20250902-005', 'MON-003', 'bekas', 'coba 2 barang di lab dan 3 barang bekas di gudang', 4, 2, 'tersedia', 'mon-003-20250902-005-monitor-lg-19-led_1756814762', 'assets/media/qrcode/mon-003-20250902-005-monitor-lg-19-led_1756814762.png', '2025-09-02 19:06:03', '2025-09-02 19:06:03', NULL, ''),
+('NB-002-20250902-001', 'NB-002', 'baru', '-', 2, 1, 'tersedia', 'nb-002-20250902-001-laptop-lenovo-v14_1756816153', 'assets/media/qrcode/nb-002-20250902-001-laptop-lenovo-v14_1756816153.png', '2025-09-02 19:29:13', '2025-09-02 19:29:13', NULL, ''),
+('NB-002-20250902-002', 'NB-002', 'baru', '-', 2, 2, 'tersedia', 'nb-002-20250902-002-laptop-lenovo-v14_1756816153', 'assets/media/qrcode/nb-002-20250902-002-laptop-lenovo-v14_1756816153.png', '2025-09-02 19:29:13', '2025-09-02 19:29:13', NULL, '');
 
 -- --------------------------------------------------------
 
@@ -923,8 +818,11 @@ INSERT INTO `inventaris` (`kode_barang`, `id_master_barang`, `kondisi`, `spesifi
 CREATE TABLE `master_barang` (
   `kode_brg` varchar(255) NOT NULL,
   `nama_brg` varchar(255) NOT NULL,
-  `jenis_brg` enum('hrd','sfw') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `jenis_brg` enum('hrd','sfw','tools') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `merk` varchar(255) NOT NULL,
+  `spesifikasi` text,
+  `id_satuan` int DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -933,8 +831,32 @@ CREATE TABLE `master_barang` (
 -- Dumping data for table `master_barang`
 --
 
-INSERT INTO `master_barang` (`kode_brg`, `nama_brg`, `jenis_brg`, `merk`, `created_at`, `updated_at`) VALUES
-('PRI-20250828-507', 'Printer', NULL, 'Epson', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+INSERT INTO `master_barang` (`kode_brg`, `nama_brg`, `jenis_brg`, `merk`, `spesifikasi`, `id_satuan`, `is_active`, `created_at`, `updated_at`) VALUES
+('CAB-PWR-013', 'Kabel Power PC', 'sfw', 'Vention', 'Kabel Power 3 pin 1.5m', 4, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('CAB-TIE-025', 'Cable Tie 100pcs', 'tools', 'Kenmaster', 'Tie Kabel 10cm', 9, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('CABL-UTP-019', 'Kabel UTP Cat6', 'tools', 'Belden', 'CAT6 305m, Solid Copper', 9, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('CCTV-021', 'Kamera CCTV IP', 'tools', 'Dahua', 'IP Camera, 2MP, Night Vision', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('CPU-001', 'Unit Komputer Rakitan', 'hrd', 'Rakitan', 'Core i5, 8GB, SSD 256GB, Win 10 Spectre', 2, 1, '2025-09-02 18:26:06', '2025-09-03 19:48:01'),
+('CRMP-018', 'Crimping Tool', 'tools', 'Kenmaster', 'Multi function, RJ45, RJ11', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('ETH-EXT-022', 'Ethernet Extender', 'tools', 'TP-Link', 'Adapter Ethernet RJ45', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('HDMI-012', 'Kabel HDMI 2 Meter', 'sfw', 'Vention', 'HDMI Male to Male, 2m', 4, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('KB-008', 'Keyboard Logitech K120', 'sfw', 'Logitech', 'USB Wired, 104 keys', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('LAN-TSTR-017', 'LAN Tester', 'tools', 'Proskit', 'RJ45 RJ11 Cable Tester', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('MIC-011', 'Microphone Clip-on', 'sfw', 'Vivan', 'Omni, 3.5mm', 4, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('MODM-016', 'Modem USB Huawei', 'tools', 'Huawei', '4G LTE, USB, Unlock', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('MON-003', 'Monitor LG 19\" LED', 'hrd', 'LG', '19 Inch, 1366x768, HDMI/VGA', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('MSE-009', 'Mouse Logitech B100', 'sfw', 'Logitech', 'USB Wired Optical', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('NB-002', 'Laptop Lenovo V14', 'hrd', 'Lenovo', 'Core i3, 8GB, SSD 512GB, 14 Inch', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('PATCH-024', 'Patch Cord UTP 1m', 'tools', 'Belden', 'UTP Cat6, 1 meter', 4, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('PJTR-006', 'Proyektor Epson X05', 'hrd', 'Epson', '3300 Lumens, HDMI/VGA', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('PRNT-004', 'Printer HP DeskJet 2135', 'hrd', 'HP', 'Print/Scan/Copy, USB, Inkjet', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('RJ45-CONN-020', 'Konektor RJ45', 'tools', 'AMP', 'Konektor Modular RJ45 Cat5/Cat6', 8, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('ROUT-015', 'Router MikroTik RB941', 'tools', 'MikroTik', 'hAP Lite, 4 Port, Wireless', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('SCNR-007', 'Scanner Canon LiDE 300', 'hrd', 'Canon', 'A4, USB, CIS Sensor', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('SPKR-010', 'Speaker Simbadda CST 600N', 'sfw', 'Simbadda', 'Stereo, 2.0 USB Powered', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('SPLT-023', 'Kabel Splitter LAN', 'tools', 'OEM', '1 to 2 RJ45 Splitter', 4, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('SW-HUB-014', 'Switch TP-Link 8 Port', 'tools', 'TP-Link', '8 Port, 10/100 Mbps, Plastik', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06'),
+('UPS-005', 'UPS APC 650VA', 'hrd', 'APC', 'Backup 650VA, 2 Output', 2, 1, '2025-09-02 18:26:06', '2025-09-02 18:26:06');
 
 -- --------------------------------------------------------
 
@@ -952,25 +874,59 @@ CREATE TABLE `migrations` (
   `batch` int UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `migrations`
+-- Table structure for table `peminjaman_detail`
 --
 
-INSERT INTO `migrations` (`id`, `version`, `class`, `group`, `namespace`, `time`, `batch`) VALUES
-(1, '2017-11-20-223112', 'Myth\\Auth\\Database\\Migrations\\CreateAuthTables', 'default', 'Myth\\Auth', 1695796381, 1);
+CREATE TABLE `peminjaman_detail` (
+  `id` int NOT NULL,
+  `id_user` int UNSIGNED NOT NULL,
+  `peminjaman_id` int NOT NULL,
+  `jumlah` int NOT NULL,
+  `jumlah_kembali` int DEFAULT '0',
+  `kondisi_kembali` enum('baik','rusak','hilang') DEFAULT 'baik',
+  `detail` text NOT NULL,
+  `inventaris_id` varchar(255) DEFAULT NULL,
+  `ruangan_id` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `peminjaman_detail`
+--
+
+INSERT INTO `peminjaman_detail` (`id`, `id_user`, `peminjaman_id`, `jumlah`, `jumlah_kembali`, `kondisi_kembali`, `detail`, `inventaris_id`, `ruangan_id`) VALUES
+(1, 22, 1, 1, 0, 'baik', '', 'MON-003-20250902-001', 1),
+(2, 22, 1, 1, 0, 'baik', '', 'MON-003-20250902-004', 2);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengadaan_barang`
+-- Table structure for table `peminjaman_header`
 --
 
-CREATE TABLE `pengadaan_barang` (
-  `pengadaan_barang_id` varchar(255) NOT NULL,
-  `tanggal_pengadaan` date NOT NULL,
-  `tahun_periode` varchar(255) NOT NULL,
-  `id_user` int NOT NULL
+CREATE TABLE `peminjaman_header` (
+  `peminjaman_id` int NOT NULL,
+  `kode_transaksi` varchar(50) NOT NULL,
+  `tanggal_permintaan` date NOT NULL,
+  `tanggal_pinjam` datetime NOT NULL,
+  `tanggal_kembali_rencana` datetime DEFAULT NULL,
+  `tanggal_kembali_real` datetime DEFAULT NULL,
+  `id_user` int UNSIGNED NOT NULL,
+  `approved_by` int DEFAULT NULL,
+  `ruangan_id_pinjam` int DEFAULT NULL,
+  `ruangan_id_sebelum` int DEFAULT NULL,
+  `status` enum('dipinjam','kembali sebagian','kembali semua') DEFAULT 'dipinjam',
+  `catatan` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `peminjaman_header`
+--
+
+INSERT INTO `peminjaman_header` (`peminjaman_id`, `kode_transaksi`, `tanggal_permintaan`, `tanggal_pinjam`, `tanggal_kembali_rencana`, `tanggal_kembali_real`, `id_user`, `approved_by`, `ruangan_id_pinjam`, `ruangan_id_sebelum`, `status`, `catatan`) VALUES
+(1, 'PINJAM-20250903220931', '2025-09-03', '0000-00-00 00:00:00', NULL, NULL, 22, NULL, NULL, NULL, '', 'cek 2 peminjaman');
 
 -- --------------------------------------------------------
 
@@ -986,24 +942,48 @@ CREATE TABLE `pengecekan` (
   `keterangan` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `pengecekan`
---
-
-INSERT INTO `pengecekan` (`pengecekan_id`, `id_inventaris`, `tanggal_pengecekan`, `lokasi_lama`, `keterangan`) VALUES
-(1, 'KD-20250828085356824', '2025-08-28', 'Lab', 'baru');
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `permintaan_barang`
+-- Table structure for table `ruangan`
 --
 
-CREATE TABLE `permintaan_barang` (
-  `permintaan_barang_id` varchar(255) NOT NULL,
-  `tanggal_permintaan` date NOT NULL,
-  `id_user` int NOT NULL
+CREATE TABLE `ruangan` (
+  `id` int NOT NULL,
+  `nama_ruangan` varchar(100) NOT NULL,
+  `keterangan` text,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ruangan`
+--
+
+INSERT INTO `ruangan` (`id`, `nama_ruangan`, `keterangan`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Lab TKJ 1', 'Laboratorium TKJ - Komputer Jaringan Kubu 1', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(2, 'Lab TKJ 2', 'Laboratorium TKJ - Komputer Jaringan Kubu 2', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(3, 'Lab TJAT', 'Lab TJAT (Teknik Jaringan Akses Telekomunikasi)', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(4, 'Lab TJKt', 'Lab TJKt (Teknik Jaringan Komputer Telekomunikasi)', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(5, 'Lab AKL', 'Laboratorium Akuntansi Keuangan Lembaga', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(6, 'Lab KI', 'Laboratorium Kimia Industri', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(7, 'Lab Komputer Umum', 'Lab komputer untuk pelajaran umum', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(8, 'Ruang Akuntansi', 'Ruangan praktek & simulasi akuntansi', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(9, 'Ruang Kelas AKL', 'Kelas khusus Akuntansi', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(10, 'Ruang Kelas TKJ', 'Kelas khusus TKJ', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(11, 'Ruang Guru', 'Ruangan Guru', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(12, 'Ruang Kepala Sekolah', 'Ruangan Kepala Sekolah', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(13, 'Ruang BK', 'Bimbingan Konseling', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(14, 'Ruang TU', 'Tata Usaha', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(15, 'Perpustakaan', 'Perpustakaan', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(16, 'UKS', 'Unit Kesehatan Sekolah', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(17, 'Ruang OSIS', 'Organisasi Siswa Intra Sekolah', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(18, 'Ruang Musik', 'Ruang seni & musik', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(19, 'Ruang Serbaguna', 'Aula / ruang serbaguna', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(20, 'Mushola', 'Tempat ibadah', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(21, 'Gudang Alat', 'Gudang penyimpanan inventaris alat', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24'),
+(22, 'Ruang Rapat', 'Ruang meeting / rapat guru & manajemen', 1, '2025-09-03 21:21:24', '2025-09-03 21:21:24');
 
 -- --------------------------------------------------------
 
@@ -1040,15 +1020,28 @@ INSERT INTO `satuan` (`satuan_id`, `nama_satuan`, `created_at`, `updated_at`) VA
 
 CREATE TABLE `transaksi_barang` (
   `id` int NOT NULL,
-  `kode_barang` int DEFAULT NULL,
-  `tanggal_barang_masuk` date DEFAULT NULL,
-  `tanggal_barang_keluar` date DEFAULT NULL,
-  `stok` int NOT NULL,
-  `jenis_transaksi` varchar(20) NOT NULL,
+  `kode_barang` varchar(50) NOT NULL,
+  `id_master_barang` varchar(255) NOT NULL,
+  `tanggal_transaksi` datetime DEFAULT NULL,
+  `jenis_transaksi` enum('masuk','keluar','rusak','pindah','afkir') DEFAULT NULL,
   `informasi_tambahan` text,
   `jumlah_perubahan` int NOT NULL,
-  `deleted_at` datetime NOT NULL
+  `user_id` int DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `transaksi_barang`
+--
+
+INSERT INTO `transaksi_barang` (`id`, `kode_barang`, `id_master_barang`, `tanggal_transaksi`, `jenis_transaksi`, `informasi_tambahan`, `jumlah_perubahan`, `user_id`, `deleted_at`) VALUES
+(14, 'MON-003-20250902-001', 'MON-003', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(15, 'MON-003-20250902-002', 'MON-003', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(16, 'MON-003-20250902-003', 'MON-003', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(17, 'MON-003-20250902-004', 'MON-003', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(18, 'MON-003-20250902-005', 'MON-003', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(19, 'NB-002-20250902-001', 'NB-002', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL),
+(20, 'NB-002-20250902-002', 'NB-002', '2025-09-02 00:00:00', 'masuk', 'Inventaris baru ditambahkan', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1081,8 +1074,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `username`, `fullname`, `foto`, `password_hash`, `reset_hash`, `reset_at`, `reset_expires`, `activate_hash`, `status`, `status_message`, `active`, `force_pass_reset`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(20, 'gg@gmail.com', 'admin', 'petugas', 'profil.svg', '$2y$10$hyyJBauXdAnqszFH2kVZYO4WG/2Z4eeYDkGQU6XIP1Bye.TVgIcvS', NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, '2025-08-28 19:48:19', '2025-08-28 19:48:19', NULL),
-(21, 'use@gmail.com', 'user', NULL, 'profil.svg', '$2y$10$rF42lZ0QiaALflej8R4vIuE6Rzc1yliMtgDQmV2PDXpWDvHJYru7O', NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, '2025-08-28 19:51:15', '2025-08-28 19:51:15', NULL);
+(22, 'Ganda@gmail.com', 'admin', NULL, 'profil.svg', '$2y$10$mXIeRd6/UgI4E3Y7JWB3/eoh/z1XGjzEIlhJQK6iO/Prp5Dzrt2rW', NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, '2025-08-30 18:50:05', '2025-08-30 18:50:30', NULL);
 
 --
 -- Indexes for dumped tables
@@ -1150,49 +1142,6 @@ ALTER TABLE `auth_users_permissions`
   ADD KEY `user_id_permission_id` (`user_id`,`permission_id`);
 
 --
--- Indexes for table `balasan_pengadaan`
---
-ALTER TABLE `balasan_pengadaan`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `balasan_permintaan`
---
-ALTER TABLE `balasan_permintaan`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `barang`
---
-ALTER TABLE `barang`
-  ADD PRIMARY KEY (`kode_barang`),
-  ADD UNIQUE KEY `kode_barang` (`kode_barang`),
-  ADD KEY `barang_ibfk_2` (`id_satuan`),
-  ADD KEY `id_master_barang` (`id_master_barang`);
-
---
--- Indexes for table `detail_master`
---
-ALTER TABLE `detail_master`
-  ADD PRIMARY KEY (`detail_master_id`),
-  ADD KEY `master_barang` (`master_barang`);
-
---
--- Indexes for table `detail_pengadaan_barang`
---
-ALTER TABLE `detail_pengadaan_barang`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_pengadaan_barang` (`id_pengadaan_barang`);
-
---
--- Indexes for table `detail_permintaan_barang`
---
-ALTER TABLE `detail_permintaan_barang`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_permintaan_barang_barang` (`kode_barang`),
-  ADD KEY `id_permintaan_barang` (`id_permintaan_barang`);
-
---
 -- Indexes for table `inventaris`
 --
 ALTER TABLE `inventaris`
@@ -1213,10 +1162,22 @@ ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `pengadaan_barang`
+-- Indexes for table `peminjaman_detail`
 --
-ALTER TABLE `pengadaan_barang`
-  ADD PRIMARY KEY (`pengadaan_barang_id`);
+ALTER TABLE `peminjaman_detail`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_permintaan_barang_barang` (`inventaris_id`),
+  ADD KEY `id_permintaan_barang` (`peminjaman_id`),
+  ADD KEY `fk_peminjaman_detail_user` (`id_user`);
+
+--
+-- Indexes for table `peminjaman_header`
+--
+ALTER TABLE `peminjaman_header`
+  ADD PRIMARY KEY (`peminjaman_id`),
+  ADD KEY `fk_peminjaman_header_user` (`id_user`),
+  ADD KEY `fk_header_ruangan_pinjam` (`ruangan_id_pinjam`),
+  ADD KEY `fk_header_ruangan_sebelum` (`ruangan_id_sebelum`);
 
 --
 -- Indexes for table `pengecekan`
@@ -1226,10 +1187,10 @@ ALTER TABLE `pengecekan`
   ADD KEY `pengecekan_ibfk_1` (`id_inventaris`);
 
 --
--- Indexes for table `permintaan_barang`
+-- Indexes for table `ruangan`
 --
-ALTER TABLE `permintaan_barang`
-  ADD PRIMARY KEY (`permintaan_barang_id`);
+ALTER TABLE `ruangan`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `satuan`
@@ -1272,7 +1233,7 @@ ALTER TABLE `auth_groups`
 -- AUTO_INCREMENT for table `auth_logins`
 --
 ALTER TABLE `auth_logins`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=584;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=588;
 
 --
 -- AUTO_INCREMENT for table `auth_permissions`
@@ -1293,52 +1254,34 @@ ALTER TABLE `auth_tokens`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `balasan_pengadaan`
---
-ALTER TABLE `balasan_pengadaan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `balasan_permintaan`
---
-ALTER TABLE `balasan_permintaan`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `barang`
---
-ALTER TABLE `barang`
-  MODIFY `kode_barang` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `detail_master`
---
-ALTER TABLE `detail_master`
-  MODIFY `detail_master_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `detail_pengadaan_barang`
---
-ALTER TABLE `detail_pengadaan_barang`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `detail_permintaan_barang`
---
-ALTER TABLE `detail_permintaan_barang`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `peminjaman_detail`
+--
+ALTER TABLE `peminjaman_detail`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `peminjaman_header`
+--
+ALTER TABLE `peminjaman_header`
+  MODIFY `peminjaman_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `pengecekan`
 --
 ALTER TABLE `pengecekan`
-  MODIFY `pengecekan_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `pengecekan_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ruangan`
+--
+ALTER TABLE `ruangan`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `satuan`
@@ -1350,13 +1293,13 @@ ALTER TABLE `satuan`
 -- AUTO_INCREMENT for table `transaksi_barang`
 --
 ALTER TABLE `transaksi_barang`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Constraints for dumped tables
@@ -1370,69 +1313,26 @@ ALTER TABLE `auth_groups_permissions`
   ADD CONSTRAINT `auth_groups_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `auth_permissions` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `auth_groups_users`
---
-ALTER TABLE `auth_groups_users`
-  ADD CONSTRAINT `auth_groups_users_group_id_foreign` FOREIGN KEY (`group_id`) REFERENCES `auth_groups` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `auth_groups_users_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `auth_tokens`
 --
 ALTER TABLE `auth_tokens`
   ADD CONSTRAINT `auth_tokens_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `auth_users_permissions`
+-- Constraints for table `peminjaman_detail`
 --
-ALTER TABLE `auth_users_permissions`
-  ADD CONSTRAINT `auth_users_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `auth_permissions` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `auth_users_permissions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+ALTER TABLE `peminjaman_detail`
+  ADD CONSTRAINT `fk_peminjaman_detail_header` FOREIGN KEY (`peminjaman_id`) REFERENCES `peminjaman_header` (`peminjaman_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_peminjaman_detail_inventaris` FOREIGN KEY (`inventaris_id`) REFERENCES `inventaris` (`kode_barang`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_peminjaman_detail_user` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `barang`
+-- Constraints for table `peminjaman_header`
 --
-ALTER TABLE `barang`
-  ADD CONSTRAINT `barang_ibfk_2` FOREIGN KEY (`id_satuan`) REFERENCES `satuan` (`satuan_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `barang_ibfk_3` FOREIGN KEY (`id_master_barang`) REFERENCES `detail_master` (`detail_master_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `detail_master`
---
-ALTER TABLE `detail_master`
-  ADD CONSTRAINT `detail_master_ibfk_1` FOREIGN KEY (`master_barang`) REFERENCES `master_barang` (`kode_brg`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `detail_pengadaan_barang`
---
-ALTER TABLE `detail_pengadaan_barang`
-  ADD CONSTRAINT `detail_pengadaan_barang_ibfk_1` FOREIGN KEY (`id_pengadaan_barang`) REFERENCES `pengadaan_barang` (`pengadaan_barang_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `detail_permintaan_barang`
---
-ALTER TABLE `detail_permintaan_barang`
-  ADD CONSTRAINT `detail_permintaan_barang_ibfk_1` FOREIGN KEY (`kode_barang`) REFERENCES `barang` (`kode_barang`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `detail_permintaan_barang_ibfk_2` FOREIGN KEY (`id_permintaan_barang`) REFERENCES `permintaan_barang` (`permintaan_barang_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `inventaris`
---
-ALTER TABLE `inventaris`
-  ADD CONSTRAINT `inventaris_ibfk_2` FOREIGN KEY (`id_satuan`) REFERENCES `satuan` (`satuan_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `inventaris_ibfk_3` FOREIGN KEY (`id_master_barang`) REFERENCES `detail_master` (`detail_master_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pengecekan`
---
-ALTER TABLE `pengecekan`
-  ADD CONSTRAINT `pengecekan_ibfk_1` FOREIGN KEY (`id_inventaris`) REFERENCES `inventaris` (`kode_barang`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `transaksi_barang`
---
-ALTER TABLE `transaksi_barang`
-  ADD CONSTRAINT `transaksi_barang_ibfk_1` FOREIGN KEY (`kode_barang`) REFERENCES `barang` (`kode_barang`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `peminjaman_header`
+  ADD CONSTRAINT `fk_header_ruangan_pinjam` FOREIGN KEY (`ruangan_id_pinjam`) REFERENCES `ruangan` (`id`),
+  ADD CONSTRAINT `fk_header_ruangan_sebelum` FOREIGN KEY (`ruangan_id_sebelum`) REFERENCES `ruangan` (`id`),
+  ADD CONSTRAINT `fk_peminjaman_header_user` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

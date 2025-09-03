@@ -19,7 +19,7 @@
         <div class="col-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h3>Rekap Inventaris Per Ruangan</h3>
+                   
                     <a href="/Admin/tambah_inv" class="btn btn-primary">
                         <i class="fa fa-plus"></i> Tambah Barang
                     </a>
@@ -50,7 +50,7 @@
                                     <td style="text-align:center;"><?= esc($row['stok']); ?></td>
                                     <td style="text-align:center;">
                                         <button class="btn btn-info btn-sm toggle-detail"
-                                            data-key="<?= $key ?>">Expand</button>
+                                            data-key="<?= $key ?>">Show All</button>
                                     </td>
                                 </tr>
                                 <!-- Expandable: detail SN/unit (initially hidden) -->
@@ -84,7 +84,7 @@
                                                             <td><?= date('d-m-Y', strtotime($detail['created_at'])) ?></td>
                                                             <td>
                                                                 <a href="/Admin/detail_inv/<?= $detail['kode_barang'] ?>" class="btn btn-primary btn-xs" title="Lihat"><i class="fa fa-eye"></i></a>
-                                                                <a href="/Admin/ubah/<?= $detail['kode_barang'] ?>" class="btn btn-warning btn-xs" title="Edit"><i class="fa fa-edit"></i></a>
+                                                                <!-- <a href="/Admin/ubah/<?= $detail['kode_barang'] ?>" class="btn btn-warning btn-xs" title="Edit"><i class="fa fa-edit"></i></a> -->
                                                             </td>
                                                         </tr>
                                                         <?php endif; ?>
