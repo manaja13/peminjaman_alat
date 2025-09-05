@@ -7,7 +7,10 @@ use App\Models\BarangModel;
 use App\Models\detailPengadaanModel;
 use App\Models\detailPermintaanModel;
 use App\Models\InventarisModel;
+use App\Models\KategoriBarangModel;
 use App\Models\masterBarangModel;
+use App\Models\MerkBarangModel;
+use App\Models\MerkKategoriBarangModel;
 use App\Models\PeminjamanDetailModel;
 use App\Models\PeminjamanHeaderModel;
 use App\Models\PengadaanModel;
@@ -52,28 +55,34 @@ class Admin extends BaseController
     protected $PeminjamanHeaderModel;
     protected $PeminjamanDetailModel;
     protected $RuanganModel;
+    protected $KategoriBarangModel;
+    protected $MerkBarangModel;
+    protected $MerkKategoriBarangModel;
     public function __construct()
     {
-        $this->InventarisModel       = new InventarisModel();
-        $this->PermintaanModel       = new PermintaanModel();
-        $this->PengadaanModel        = new PengadaanModel();
-        $this->detailPengadaanModel  = new detailPengadaanModel();
-        $this->detailPermintaanModel = new detailPermintaanModel();
-        $this->BalasanModel          = new BalasanModel();
-        $this->Profil                = new Profil();
-        $this->pengecekanModel       = new pengecekanModel();
-        $this->BarangModel           = new BarangModel();
-        $this->satuanModel           = new satuanModel();
-        $this->TransaksiBarangModel  = new TransaksiBarangModel();
-        $this->PeminjamanHeaderModel = new PeminjamanHeaderModel();
-        $this->PeminjamanDetailModel = new PeminjamanDetailModel();
-        $this->RuanganModel          = new RuanganModel();
-        $this->db                    = \Config\Database::connect();
-        $this->builder               = $this->db->table('users');
-        $this->validation            = \Config\Services::validation();
-        $this->session               = \Config\Services::session();
-        $this->ciqrcode              = new \App\Libraries\Ciqrcode();
-        $this->masterBarangModel     = new masterBarangModel();
+        $this->InventarisModel         = new InventarisModel();
+        $this->PermintaanModel         = new PermintaanModel();
+        $this->PengadaanModel          = new PengadaanModel();
+        $this->detailPengadaanModel    = new detailPengadaanModel();
+        $this->detailPermintaanModel   = new detailPermintaanModel();
+        $this->BalasanModel            = new BalasanModel();
+        $this->Profil                  = new Profil();
+        $this->pengecekanModel         = new pengecekanModel();
+        $this->BarangModel             = new BarangModel();
+        $this->satuanModel             = new satuanModel();
+        $this->TransaksiBarangModel    = new TransaksiBarangModel();
+        $this->PeminjamanHeaderModel   = new PeminjamanHeaderModel();
+        $this->PeminjamanDetailModel   = new PeminjamanDetailModel();
+        $this->RuanganModel            = new RuanganModel();
+        $this->db                      = \Config\Database::connect();
+        $this->builder                 = $this->db->table('users');
+        $this->validation              = \Config\Services::validation();
+        $this->session                 = \Config\Services::session();
+        $this->ciqrcode                = new \App\Libraries\Ciqrcode();
+        $this->masterBarangModel       = new masterBarangModel();
+        $this->KategoriBarangModel     = new KategoriBarangModel();
+        $this->MerkBarangModel         = new MerkBarangModel();
+        $this->MerkKategoriBarangModel = new MerkKategoriBarangModel();
     }
 
     public function index()
@@ -487,17 +496,19 @@ class Admin extends BaseController
     {
         // Group rekap: stok per barang per ruangan
         $rekap = $this->InventarisModel
-            ->select('inventaris.lokasi, master_barang.nama_brg, master_barang.merk, master_barang.jenis_brg, COUNT(inventaris.kode_barang) as stok')
+            ->select('ruangan.nama_ruangan, master_barang.nama_brg, master_barang.merk, master_barang.jenis_brg, COUNT(inventaris.kode_barang) as stok')
             ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang')
+            ->join('ruangan', 'ruangan.id = inventaris.ruangan_id', 'left')
             ->where('master_barang.is_active', 1)
-            ->groupBy('inventaris.lokasi, inventaris.id_master_barang')
-            ->orderBy('inventaris.lokasi, master_barang.nama_brg')
+            ->groupBy('ruangan.nama_ruangan, inventaris.id_master_barang')
+            ->orderBy('ruangan.nama_ruangan, master_barang.nama_brg')
             ->findAll();
 
         // Detail: semua row per SN/unit
         $inventaris = $this->InventarisModel
-            ->select('inventaris.*, master_barang.nama_brg, master_barang.merk, master_barang.jenis_brg')
+            ->select('inventaris.*, master_barang.nama_brg, master_barang.merk, master_barang.jenis_brg, ruangan.nama_ruangan')
             ->join('master_barang', 'master_barang.kode_brg = inventaris.id_master_barang')
+            ->join('ruangan', 'ruangan.id = inventaris.ruangan_id', 'left')
             ->where('master_barang.is_active', 1)
             ->findAll();
 

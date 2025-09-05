@@ -40,10 +40,10 @@
                             </thead>
                             <tbody>
                                 <?php $no = 1; foreach ($rekap as $row): ?>
-                                <?php $key = md5($row['lokasi'].'|'.$row['nama_brg']); ?>
+                                <?php $key = md5($row['nama_ruangan'].'|'.$row['nama_brg']); ?>
                                 <tr class="group-row">
                                     <td><?= $no++; ?></td>
-                                    <td><?= esc($row['lokasi']); ?></td>
+                                    <td><?= esc($row['nama_ruangan']); ?></td>
                                     <td><?= esc($row['nama_brg']); ?></td>
                                     <td><?= esc($row['merk']); ?></td>
                                     <td><?= esc($row['jenis_brg']); ?></td>
@@ -57,7 +57,7 @@
                                 <tr class="detail-row" style="display:none;" data-key="<?= $key ?>">
                                     <td colspan="7">
                                         <div class="p-2 bg-light rounded shadow-sm">
-                                            <b>Unit di <?= esc($row['lokasi']) ?> (<?= esc($row['nama_brg']) ?>):</b>
+                                            <b>Unit di <?= esc($row['nama_ruangan']) ?> (<?= esc($row['nama_brg']) ?>):</b>
                                             <table class="table table-sm table-hover mb-0 mt-2">
                                                 <thead>
                                                     <tr>
@@ -69,7 +69,7 @@
                                                 </thead>
                                                 <tbody>
                                                     <?php foreach ($inventaris as $detail): ?>
-                                                        <?php if ($detail['lokasi'] == $row['lokasi'] && $detail['nama_brg'] == $row['nama_brg']): ?>
+                                                        <?php if ($detail['nama_ruangan'] == $row['nama_ruangan'] && $detail['nama_brg'] == $row['nama_brg']): ?>
                                                         <tr>
                                                             <td><?= esc($detail['kode_barang']); ?></td>
                                                             <td>
