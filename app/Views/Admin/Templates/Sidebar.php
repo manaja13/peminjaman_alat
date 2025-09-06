@@ -130,6 +130,12 @@
                     href="<?php echo base_url('Admin/masterBarang'); ?>"><i class="fas fa-box"></i> Master Barang </a>
                 <a class="collapse-item"
                     href="<?php echo base_url('Admin/satuan'); ?>"><i class="fas fa-ruler"></i> Master Satuan</a>
+                <a class="collapse-item"
+                    href="<?php echo base_url('Admin/merk'); ?>"><i class="fas fa-ruler"></i> Master Merk</a>
+                <a class="collapse-item"
+                    href="<?php echo base_url('Admin/kategori'); ?>"><i class="fas fa-ruler"></i> Master Kategori</a>
+                <a class="collapse-item"
+                    href="<?php echo base_url('Admin/kategori-merk'); ?>"><i class="fas fa-ruler"></i> Master Kategori-merk</a>
             </div>
         </div>
     </li>
